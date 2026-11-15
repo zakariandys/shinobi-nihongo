@@ -222,8 +222,9 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
    <p id="apiInfo">Key hanya disimpan di perangkat ini dan dikirim langsung ke penyedia yang dipilih.</p>
    <label for="provider">Penyedia</label>
    <select id="provider">
-    <option value="grok">Grok (xAI)</option>
-    <option value="claude">Claude (Anthropic)</option>
+    <option value="groq">Groq (gratis, key gsk_…)</option>
+    <option value="grok">Grok (xAI, key xai-…)</option>
+    <option value="claude">Claude (Anthropic, key sk-ant-…)</option>
    </select>
    <label for="apiKey">API key</label>
    <div class="row"><input id="apiKey" class="inp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xai-..."><button class="btn icon" data-action="toggle-key" aria-label="Tampilkan key">👁</button></div>
@@ -469,10 +470,10 @@ function markDay(){
  var s=streak().n;if(s>(data.best||0))data.best=s;save();renderStreak();
  toast(s>1?'🔥 Streak '+s+' hari! Lanjutkan':'🔥 Streak dimulai! Sampai jumpa besok');
 }
-var api={provider:'grok',keys:{grok:'',claude:''},models:{grok:'',claude:'claude-haiku-5-5'},grokModels:[]};
+var api={provider:'groq',keys:{groq:'',grok:'',claude:''},models:{groq:'',grok:'',claude:'claude-haiku-5-5'},lists:{groq:[],grok:[]}};
 try{var a0=JSON.parse(localStorage.getItem(KEY_API)||'null');if(a0)api=Object.assign(api,a0)}catch(e){}
 if(api.key){api.keys=api.keys||{};if(!api.keys.claude)api.keys.claude=api.key;if(api.model)(api.models=api.models||{}).claude=api.model;delete api.key;delete api.model;if(!api.provider||api.provider==='grok')api.provider='claude'}
-api.keys=Object.assign({grok:'',claude:''},api.keys||{});api.models=Object.assign({grok:'',claude:'claude-haiku-5-5'},api.models||{});if(!Array.isArray(api.grokModels))api.grokModels=[];if(!api.provider)api.provider='grok';
+api.keys=Object.assign({groq:'',grok:'',claude:''},api.keys||{});api.models=Object.assign({groq:'',grok:'',claude:'claude-haiku-5-5'},api.models||{});api.lists=Object.assign({groq:[],grok:[]},api.lists||{});if(Array.isArray(api.grokModels)){if(api.grokModels.length)api.lists.grok=api.grokModels;delete api.grokModels}if(!api.provider)api.provider='groq';
 function saveApi(){try{localStorage.setItem(KEY_API,JSON.stringify(api))}catch(e){}}
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -738,29 +739,33 @@ async function callClaude(prompt,key,model){
  var txt=(j&&j.content||[]).filter(function(c){return c.type==='text'}).map(function(c){return c.text}).join('');
  return txt;
 }
-var GROK_DEFAULT='grok-4-1-fast';
+var PROV={
+ groq:{name:'Groq',base:'https://api.groq.com/openai/v1',def:'llama-3.3-70b-versatile',pref:[/gpt-oss-120b/,/kimi/i,/qwen/i,/llama-3\.3-70b/,/llama/]},
+ grok:{name:'Grok',base:'https://api.x.ai/v1',def:'grok-4-1-fast',pref:[/fast(?!.*reason)/i,/mini/i]}
+};
+function detectProv(k){return /^gsk_/.test(k)?'groq':/^xai-/.test(k)?'grok':/^sk-ant-/.test(k)?'claude':''}
 function netErr(e){if(e&&e.code)throw e;throw {code:'network',message:'tidak bisa terhubung (cek internet; kalau tetap gagal, penyedia mungkin memblokir akses langsung dari browser)'}}
-async function grokModels(key){
- var r;try{r=await fetch('https://api.x.ai/v1/models',{headers:{'Authorization':'Bearer '+key}})}catch(e){netErr(e)}
+function apiErr(r,j){var m=j&&(j.error&&(j.error.message||j.error)||j.message)||('HTTP '+r.status);return {code:(r.status===401||r.status===403)?'bad_key':r.status===429?'rate_limited':'api',message:String(m)}}
+async function listModels(prov,key){
+ var r;try{r=await fetch(PROV[prov].base+'/models',{headers:{'Authorization':'Bearer '+key}})}catch(e){netErr(e)}
  var j=null;try{j=await r.json()}catch(e){}
- if(!r.ok){var m=j&&(j.error&&(j.error.message||j.error)||j.message)||('HTTP '+r.status);throw {code:(r.status===401||r.status===403||r.status===400)?'bad_key':'api',message:String(m)}}
- return ((j&&j.data)||[]).map(function(x){return x.id}).filter(function(id){return /grok/i.test(id)&&!/image|vision|imagine|video|embed/i.test(id)});
+ if(!r.ok)throw apiErr(r,j);
+ return ((j&&j.data)||[]).filter(function(x){return x.active!==false}).map(function(x){return x.id}).filter(function(id){return !/whisper|tts|guard|playai|orpheus|image|vision|imagine|video|embed|compound|distil/i.test(id)});
 }
-function pickGrok(ids){
- var pref=ids.filter(function(i){return /fast/i.test(i)&&!/reason/i.test(i)});if(pref.length)return pref[0];
- pref=ids.filter(function(i){return /mini/i.test(i)});if(pref.length)return pref[0];
- return ids[0]||GROK_DEFAULT;
+function pickModel(prov,ids){
+ var P=PROV[prov];for(var i=0;i<P.pref.length;i++){var hit=ids.filter(function(x){return P.pref[i].test(x)})[0];if(hit)return hit}
+ return ids[0]||P.def;
 }
-async function callGrok(prompt,key,model){
- var r;try{r=await fetch('https://api.x.ai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-  body:JSON.stringify({model:model||GROK_DEFAULT,temperature:0.3,max_tokens:900,messages:[{role:'system',content:'You are a precise Japanese teacher. Reply with valid JSON only when asked.'},{role:'user',content:prompt}]})})}catch(e){netErr(e)}
+async function callOpenAI(prov,prompt,key,model){
+ var r;try{r=await fetch(PROV[prov].base+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+  body:JSON.stringify({model:model||PROV[prov].def,temperature:0.3,max_tokens:900,messages:[{role:'system',content:'You are a precise Japanese teacher for Indonesian speakers. Reply with valid JSON only when asked.'},{role:'user',content:prompt}]})})}catch(e){netErr(e)}
  var j=null;try{j=await r.json()}catch(e){}
- if(!r.ok){var m=j&&(j.error&&(j.error.message||j.error)||j.message)||('HTTP '+r.status);throw {code:(r.status===401||r.status===403)?'bad_key':r.status===429?'rate_limited':'api',message:String(m)}}
+ if(!r.ok)throw apiErr(r,j);
  var c=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
  if(Array.isArray(c))c=c.map(function(x){return x.text||''}).join('');
  return c||'';
 }
-function callProvider(prompt,prov,key,model){return prov==='claude'?callClaude(prompt,key,model):callGrok(prompt,key,model)}
+function callProvider(prompt,prov,key,model){return prov==='claude'?callClaude(prompt,key,model):callOpenAI(prov,prompt,key,model)}
 async function translate(q){
  var prompt=buildPrompt(q);
  if(sampleFn)return parseJson(await sampleFn.json(prompt));
@@ -799,7 +804,7 @@ async function doTranslate(){
  }catch(e){
   if(q!==lastQuery)return;
   var c=e&&e.code,msg;
-  if(c==='no_engine')msg='Belum ada API key untuk '+(api.provider==='grok'?'Grok':'Claude')+'. <button class="link" data-action="open-settings">Isi di Pengaturan ⚙️</button>';
+  if(c==='no_engine')msg='Belum ada API key untuk '+(api.provider==='claude'?'Claude':PROV[api.provider].name)+'. <button class="link" data-action="open-settings">Isi di Pengaturan ⚙️</button>';
   else if(c==='bad_key')msg='API key ditolak. <button class="link" data-action="open-settings">Cek di Pengaturan ⚙️</button>';
   else if(c==='not_granted')msg='Izin ke Claude belum diberikan, jadi terjemahan tidak bisa jalan.';
   else if(c==='rate_limited')msg='Terlalu sering. Tunggu sebentar lalu coba lagi.';
@@ -821,16 +826,16 @@ function saveResult(){
 function fillModels(prov,sel){
  var m=$('model'),opts;
  if(prov==='claude')opts=[['claude-haiku-5-5','Haiku 5.5 (cepat & murah)'],['claude-sonnet-5-5','Sonnet 5.5 (lebih natural)']];
- else{var ids=api.grokModels.length?api.grokModels:[GROK_DEFAULT];opts=ids.map(function(i){return [i,i]});}
+ else{var ids=api.lists[prov].length?api.lists[prov]:[PROV[prov].def];opts=ids.map(function(i){return [i,i]});}
  if(sel&&!opts.some(function(o){return o[0]===sel}))opts.unshift([sel,sel]);
  m.innerHTML=opts.map(function(o){return '<option value="'+esc(o[0])+'">'+esc(o[1])+'</option>'}).join('');
  if(sel)m.value=sel;
- $('modelHint').textContent=prov==='grok'?(api.grokModels.length?'Daftar model diambil dari akun xAI-mu.':'Ketuk Tes setelah isi key: daftar model Grok akan diambil otomatis.'):'';
+ $('modelHint').textContent=prov==='claude'?'':(api.lists[prov].length?'Daftar model diambil dari akun '+PROV[prov].name+'-mu.':'Ketuk Tes setelah isi key: daftar model akan diambil otomatis.');
 }
 function showProvider(prov){
  $('provider').value=prov;$('apiKey').value=api.keys[prov]||'';$('apiKey').type='password';
- $('apiKey').placeholder=prov==='claude'?'sk-ant-...':'xai-...';
- fillModels(prov,api.models[prov]||(prov==='grok'?pickGrok(api.grokModels):''));
+ $('apiKey').placeholder=prov==='claude'?'sk-ant-...':prov==='grok'?'xai-...':'gsk_...';
+ fillModels(prov,api.models[prov]||(prov==='claude'?'':pickModel(prov,api.lists[prov])));
  $('keyStatus').textContent=api.keys[prov]?'Key tersimpan di perangkat ini.':'';
 }
 function openSettings(){
@@ -844,6 +849,7 @@ $('askForm').addEventListener('submit',function(e){e.preventDefault();doTranslat
 $('search').addEventListener('input',function(){searchQ=this.value;renderList()});
 $('sheet').addEventListener('click',function(e){if(e.target===this)this.hidden=true});
 $('provider').addEventListener('change',function(){showProvider(this.value)});
+$('apiKey').addEventListener('input',function(){var k=this.value.trim(),dp=detectProv(k);if(dp&&dp!==$('provider').value){showProvider(dp);this.value=k;$('keyStatus').textContent='Terdeteksi key '+(dp==='claude'?'Claude':PROV[dp].name)+'. Ketuk Tes.'}});
 $('wsheet').addEventListener('click',function(e){if(e.target===this)this.hidden=true});
 $('wsearch').addEventListener('input',function(){wSearch=this.value;renderWords()});
 document.addEventListener('click',function(e){
@@ -876,18 +882,19 @@ document.addEventListener('click',function(e){
  else if(a==='open-settings')openSettings();
  else if(a==='close-settings')$('sheet').hidden=true;
  else if(a==='toggle-key'){var k=$('apiKey');k.type=k.type==='password'?'text':'password'}
- else if(a==='save-key'){var pv=$('provider').value;api.provider=pv;api.keys[pv]=$('apiKey').value.trim();api.models[pv]=$('model').value;saveApi();$('keyStatus').textContent=api.keys[pv]?'Tersimpan ✓ · terjemahan memakai '+(pv==='grok'?'Grok':'Claude'):'Key dikosongkan.'}
+ else if(a==='save-key'){var pv=$('provider').value;api.provider=pv;api.keys[pv]=$('apiKey').value.trim();api.models[pv]=$('model').value;saveApi();$('keyStatus').textContent=api.keys[pv]?'Tersimpan ✓ · terjemahan memakai '+(pv==='claude'?'Claude':PROV[pv].name):'Key dikosongkan.'}
  else if(a==='clear-key'){api.keys[$('provider').value]='';$('apiKey').value='';saveApi();$('keyStatus').textContent='Key dihapus dari perangkat ini.'}
  else if(a==='test-key'){
   var key=$('apiKey').value.trim();if(!key){$('keyStatus').textContent='Isi key dulu.';return}
   $('keyStatus').textContent='Mengetes…';
+  var dp=detectProv(key);if(dp&&dp!==$('provider').value){showProvider(dp);$('apiKey').value=key}
   var pv=$('provider').value,fail=function(e){$('keyStatus').textContent='Gagal: '+(e&&e.message||'tidak bisa terhubung')};
-  if(pv==='grok'){
-   grokModels(key).then(function(ids){
-    if(ids.length){api.grokModels=ids;saveApi()}
-    var cur=$('model').value,use=ids.indexOf(cur)>=0?cur:pickGrok(ids);fillModels('grok',use);
+  if(pv!=='claude'){
+   listModels(pv,key).then(function(ids){
+    if(ids.length){api.lists[pv]=ids;saveApi()}
+    var cur=$('model').value,use=(api.models[pv]&&ids.indexOf(cur)>=0)?cur:pickModel(pv,ids);fillModels(pv,use);
     $('keyStatus').textContent='Key valid, mengetes model '+use+'…';
-    return callGrok('Reply with one word: OK',key,use).then(function(){$('keyStatus').textContent='Grok berfungsi ✓ ('+use+') · jangan lupa Simpan'});
+    return callOpenAI(pv,'Reply with one word: OK',key,use).then(function(){$('keyStatus').textContent=PROV[pv].name+' berfungsi ✓ ('+use+') · jangan lupa Simpan'});
    }).catch(fail);
   }else{
    callClaude('Balas dengan satu kata: OK',key,$('model').value).then(function(){$('keyStatus').textContent='Claude berfungsi ✓ · jangan lupa Simpan'},fail);
