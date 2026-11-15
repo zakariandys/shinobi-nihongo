@@ -756,14 +756,18 @@ function pickModel(prov,ids){
  var P=PROV[prov];for(var i=0;i<P.pref.length;i++){var hit=ids.filter(function(x){return P.pref[i].test(x)})[0];if(hit)return hit}
  return ids[0]||P.def;
 }
-async function callOpenAI(prov,prompt,key,model){
- var r;try{r=await fetch(PROV[prov].base+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-  body:JSON.stringify({model:model||PROV[prov].def,temperature:0.3,max_tokens:900,messages:[{role:'system',content:'You are a precise Japanese teacher for Indonesian speakers. Reply with valid JSON only when asked.'},{role:'user',content:prompt}]})})}catch(e){netErr(e)}
+async function callOpenAI(prov,prompt,key,model,plain){
+ model=model||PROV[prov].def;
+ var body={model:model,temperature:0.3,max_tokens:3000,messages:[{role:'system',content:'You are a precise Japanese teacher for Indonesian speakers. Reply with valid JSON only when asked.'},{role:'user',content:prompt}]};
+ // reasoning models: keep thinking short/hidden so the JSON answer is not cut off
+ if(!plain&&prov==='groq'){if(/gpt-oss/i.test(model))body.reasoning_effort='low';else if(/qwen/i.test(model))body.reasoning_format='hidden';}
+ var r;try{r=await fetch(PROV[prov].base+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify(body)})}catch(e){netErr(e)}
  var j=null;try{j=await r.json()}catch(e){}
+ if(!r.ok&&r.status===400&&!plain&&(body.reasoning_effort||body.reasoning_format))return callOpenAI(prov,prompt,key,model,true);
  if(!r.ok)throw apiErr(r,j);
  var c=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
  if(Array.isArray(c))c=c.map(function(x){return x.text||''}).join('');
- return c||'';
+ return String(c||'').replace(/<think>[\s\S]*?<\/think>/gi,'').trim();
 }
 function callProvider(prompt,prov,key,model){return prov==='claude'?callClaude(prompt,key,model):callOpenAI(prov,prompt,key,model)}
 async function translate(q){
