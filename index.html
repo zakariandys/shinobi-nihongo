@@ -218,15 +218,18 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
  <div class="sh-in" role="dialog" aria-label="Pengaturan">
   <div class="sh-head"><h2>⚙️ Pengaturan</h2><button class="btn ghost sm" data-action="close-settings">Tutup</button></div>
   <div class="sh-sec" id="secApi">
-   <h3>Terjemahan (API Claude)</h3>
-   <p id="apiInfo">Dipakai saat app dibuka di luar Claude, misalnya dari home screen. Key hanya disimpan di perangkat ini dan dikirim langsung ke Anthropic.</p>
-   <label for="apiKey">API key</label>
-   <div class="row"><input id="apiKey" class="inp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-..."><button class="btn icon" data-action="toggle-key" aria-label="Tampilkan key">👁</button></div>
-   <label for="model">Model</label>
-   <select id="model">
-    <option value="claude-sonnet-5-5">Sonnet 5.5 (lebih natural)</option>
-    <option value="claude-haiku-5-5">Haiku 5.5 (lebih cepat &amp; murah)</option>
+   <h3>Terjemahan (API)</h3>
+   <p id="apiInfo">Key hanya disimpan di perangkat ini dan dikirim langsung ke penyedia yang dipilih.</p>
+   <label for="provider">Penyedia</label>
+   <select id="provider">
+    <option value="grok">Grok (xAI)</option>
+    <option value="claude">Claude (Anthropic)</option>
    </select>
+   <label for="apiKey">API key</label>
+   <div class="row"><input id="apiKey" class="inp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="xai-..."><button class="btn icon" data-action="toggle-key" aria-label="Tampilkan key">👁</button></div>
+   <label for="model">Model</label>
+   <select id="model"></select>
+   <p id="modelHint" style="margin:6px 0 0"></p>
    <div class="btns"><button class="btn sm" data-action="save-key">Simpan</button><button class="btn ghost sm" data-action="test-key">Tes</button><button class="btn ghost sm" data-action="clear-key">Hapus key</button></div>
    <p id="keyStatus" class="ok" style="margin-top:8px"></p>
   </div>
@@ -466,8 +469,10 @@ function markDay(){
  var s=streak().n;if(s>(data.best||0))data.best=s;save();renderStreak();
  toast(s>1?'🔥 Streak '+s+' hari! Lanjutkan':'🔥 Streak dimulai! Sampai jumpa besok');
 }
-var api={key:'',model:'claude-sonnet-5-5'};
+var api={provider:'grok',keys:{grok:'',claude:''},models:{grok:'',claude:'claude-haiku-5-5'},grokModels:[]};
 try{var a0=JSON.parse(localStorage.getItem(KEY_API)||'null');if(a0)api=Object.assign(api,a0)}catch(e){}
+if(api.key){api.keys=api.keys||{};if(!api.keys.claude)api.keys.claude=api.key;if(api.model)(api.models=api.models||{}).claude=api.model;delete api.key;delete api.model;if(!api.provider||api.provider==='grok')api.provider='claude'}
+api.keys=Object.assign({grok:'',claude:''},api.keys||{});api.models=Object.assign({grok:'',claude:'claude-haiku-5-5'},api.models||{});if(!Array.isArray(api.grokModels))api.grokModels=[];if(!api.provider)api.provider='grok';
 function saveApi(){try{localStorage.setItem(KEY_API,JSON.stringify(api))}catch(e){}}
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -724,7 +729,7 @@ function parseJson(t){
  if(a<0||b<a)throw {code:'bad_json'};
  return JSON.parse(t.slice(a,b+1));
 }
-async function callApi(prompt,key,model){
+async function callClaude(prompt,key,model){
  var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{
   'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
   body:JSON.stringify({model:model,max_tokens:900,messages:[{role:'user',content:prompt}]})});
@@ -733,10 +738,33 @@ async function callApi(prompt,key,model){
  var txt=(j&&j.content||[]).filter(function(c){return c.type==='text'}).map(function(c){return c.text}).join('');
  return txt;
 }
+var GROK_DEFAULT='grok-4-1-fast';
+function netErr(e){if(e&&e.code)throw e;throw {code:'network',message:'tidak bisa terhubung (cek internet; kalau tetap gagal, penyedia mungkin memblokir akses langsung dari browser)'}}
+async function grokModels(key){
+ var r;try{r=await fetch('https://api.x.ai/v1/models',{headers:{'Authorization':'Bearer '+key}})}catch(e){netErr(e)}
+ var j=null;try{j=await r.json()}catch(e){}
+ if(!r.ok){var m=j&&(j.error&&(j.error.message||j.error)||j.message)||('HTTP '+r.status);throw {code:(r.status===401||r.status===403||r.status===400)?'bad_key':'api',message:String(m)}}
+ return ((j&&j.data)||[]).map(function(x){return x.id}).filter(function(id){return /grok/i.test(id)&&!/image|vision|imagine|video|embed/i.test(id)});
+}
+function pickGrok(ids){
+ var pref=ids.filter(function(i){return /fast/i.test(i)&&!/reason/i.test(i)});if(pref.length)return pref[0];
+ pref=ids.filter(function(i){return /mini/i.test(i)});if(pref.length)return pref[0];
+ return ids[0]||GROK_DEFAULT;
+}
+async function callGrok(prompt,key,model){
+ var r;try{r=await fetch('https://api.x.ai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+  body:JSON.stringify({model:model||GROK_DEFAULT,temperature:0.3,max_tokens:900,messages:[{role:'system',content:'You are a precise Japanese teacher. Reply with valid JSON only when asked.'},{role:'user',content:prompt}]})})}catch(e){netErr(e)}
+ var j=null;try{j=await r.json()}catch(e){}
+ if(!r.ok){var m=j&&(j.error&&(j.error.message||j.error)||j.message)||('HTTP '+r.status);throw {code:(r.status===401||r.status===403)?'bad_key':r.status===429?'rate_limited':'api',message:String(m)}}
+ var c=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+ if(Array.isArray(c))c=c.map(function(x){return x.text||''}).join('');
+ return c||'';
+}
+function callProvider(prompt,prov,key,model){return prov==='claude'?callClaude(prompt,key,model):callGrok(prompt,key,model)}
 async function translate(q){
  var prompt=buildPrompt(q);
  if(sampleFn)return parseJson(await sampleFn.json(prompt));
- if(api.key)return parseJson(await callApi(prompt,api.key,api.model));
+ var k=api.keys[api.provider];if(k)return parseJson(await callProvider(prompt,api.provider,k,api.models[api.provider]));
  throw {code:'no_engine'};
 }
 function str(x){return typeof x==='string'?x.trim():''}
@@ -771,7 +799,7 @@ async function doTranslate(){
  }catch(e){
   if(q!==lastQuery)return;
   var c=e&&e.code,msg;
-  if(c==='no_engine')msg='Belum ada API key. <button class="link" data-action="open-settings">Isi di Pengaturan ⚙️</button>';
+  if(c==='no_engine')msg='Belum ada API key untuk '+(api.provider==='grok'?'Grok':'Claude')+'. <button class="link" data-action="open-settings">Isi di Pengaturan ⚙️</button>';
   else if(c==='bad_key')msg='API key ditolak. <button class="link" data-action="open-settings">Cek di Pengaturan ⚙️</button>';
   else if(c==='not_granted')msg='Izin ke Claude belum diberikan, jadi terjemahan tidak bisa jalan.';
   else if(c==='rate_limited')msg='Terlalu sering. Tunggu sebentar lalu coba lagi.';
@@ -790,10 +818,24 @@ function saveResult(){
 }
 
 /* ---------- settings / backup ---------- */
+function fillModels(prov,sel){
+ var m=$('model'),opts;
+ if(prov==='claude')opts=[['claude-haiku-5-5','Haiku 5.5 (cepat & murah)'],['claude-sonnet-5-5','Sonnet 5.5 (lebih natural)']];
+ else{var ids=api.grokModels.length?api.grokModels:[GROK_DEFAULT];opts=ids.map(function(i){return [i,i]});}
+ if(sel&&!opts.some(function(o){return o[0]===sel}))opts.unshift([sel,sel]);
+ m.innerHTML=opts.map(function(o){return '<option value="'+esc(o[0])+'">'+esc(o[1])+'</option>'}).join('');
+ if(sel)m.value=sel;
+ $('modelHint').textContent=prov==='grok'?(api.grokModels.length?'Daftar model diambil dari akun xAI-mu.':'Ketuk Tes setelah isi key: daftar model Grok akan diambil otomatis.'):'';
+}
+function showProvider(prov){
+ $('provider').value=prov;$('apiKey').value=api.keys[prov]||'';$('apiKey').type='password';
+ $('apiKey').placeholder=prov==='claude'?'sk-ant-...':'xai-...';
+ fillModels(prov,api.models[prov]||(prov==='grok'?pickGrok(api.grokModels):''));
+ $('keyStatus').textContent=api.keys[prov]?'Key tersimpan di perangkat ini.':'';
+}
 function openSettings(){
- $('apiKey').value=api.key||'';$('apiKey').type='password';$('model').value=api.model;
- $('keyStatus').textContent=api.key?'Key tersimpan di perangkat ini.':'';
- $('apiInfo').textContent=sampleFn?'Saat dibuka di Claude, terjemahan memakai Claude langsung, jadi key tidak dibutuhkan di sini. Key dipakai saat app dibuka dari home screen.':'Dipakai saat app dibuka di luar Claude, misalnya dari home screen. Key hanya disimpan di perangkat ini dan dikirim langsung ke Anthropic.';
+ showProvider(api.provider);
+ $('apiInfo').textContent=sampleFn?'Saat dibuka di Claude, terjemahan memakai Claude langsung, jadi key tidak dibutuhkan di sini.':'Key hanya disimpan di perangkat ini dan dikirim langsung ke penyedia yang dipilih.';
  $('sheet').hidden=false;
 }
 
@@ -801,6 +843,7 @@ function openSettings(){
 $('askForm').addEventListener('submit',function(e){e.preventDefault();doTranslate()});
 $('search').addEventListener('input',function(){searchQ=this.value;renderList()});
 $('sheet').addEventListener('click',function(e){if(e.target===this)this.hidden=true});
+$('provider').addEventListener('change',function(){showProvider(this.value)});
 $('wsheet').addEventListener('click',function(e){if(e.target===this)this.hidden=true});
 $('wsearch').addEventListener('input',function(){wSearch=this.value;renderWords()});
 document.addEventListener('click',function(e){
@@ -833,12 +876,22 @@ document.addEventListener('click',function(e){
  else if(a==='open-settings')openSettings();
  else if(a==='close-settings')$('sheet').hidden=true;
  else if(a==='toggle-key'){var k=$('apiKey');k.type=k.type==='password'?'text':'password'}
- else if(a==='save-key'){api.key=$('apiKey').value.trim();api.model=$('model').value;saveApi();$('keyStatus').textContent=api.key?'Tersimpan ✓':'Key dikosongkan.'}
- else if(a==='clear-key'){api.key='';$('apiKey').value='';saveApi();$('keyStatus').textContent='Key dihapus dari perangkat ini.'}
+ else if(a==='save-key'){var pv=$('provider').value;api.provider=pv;api.keys[pv]=$('apiKey').value.trim();api.models[pv]=$('model').value;saveApi();$('keyStatus').textContent=api.keys[pv]?'Tersimpan ✓ · terjemahan memakai '+(pv==='grok'?'Grok':'Claude'):'Key dikosongkan.'}
+ else if(a==='clear-key'){api.keys[$('provider').value]='';$('apiKey').value='';saveApi();$('keyStatus').textContent='Key dihapus dari perangkat ini.'}
  else if(a==='test-key'){
   var key=$('apiKey').value.trim();if(!key){$('keyStatus').textContent='Isi key dulu.';return}
   $('keyStatus').textContent='Mengetes…';
-  callApi('Balas dengan satu kata: OK',key,$('model').value).then(function(){$('keyStatus').textContent='Key berfungsi ✓ (jangan lupa Simpan)'},function(e){$('keyStatus').textContent='Gagal: '+(e&&e.message||'tidak bisa terhubung')});
+  var pv=$('provider').value,fail=function(e){$('keyStatus').textContent='Gagal: '+(e&&e.message||'tidak bisa terhubung')};
+  if(pv==='grok'){
+   grokModels(key).then(function(ids){
+    if(ids.length){api.grokModels=ids;saveApi()}
+    var cur=$('model').value,use=ids.indexOf(cur)>=0?cur:pickGrok(ids);fillModels('grok',use);
+    $('keyStatus').textContent='Key valid, mengetes model '+use+'…';
+    return callGrok('Reply with one word: OK',key,use).then(function(){$('keyStatus').textContent='Grok berfungsi ✓ ('+use+') · jangan lupa Simpan'});
+   }).catch(fail);
+  }else{
+   callClaude('Balas dengan satu kata: OK',key,$('model').value).then(function(){$('keyStatus').textContent='Claude berfungsi ✓ · jangan lupa Simpan'},fail);
+  }
  }
 });
 
