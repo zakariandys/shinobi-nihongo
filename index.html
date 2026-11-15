@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shinobi">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<meta name="theme-color" content="#1E2433">
+<title>Shinobi Nihongo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1E2433;--card:#283044;--ink:#F3EDE4;--mute:#9AA3B5;--line:#3A4560;--accent:#E06B4F;--soft:#323B52;--gold:#E8B65A;--field:#1A2030;--tint:#3D2F36;--green:#7FC08F}
+html{color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Nunito,"Zen Maru Gothic",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+.jpf{font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 14px 150px}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
+/* header */
+.top{display:flex;align-items:center;gap:12px;margin:4px 2px 4px}
+.brand{font-size:26px;font-weight:700;line-height:1.1}
+.brand-ro{font-size:13px;color:var(--mute);margin-top:2px}
+.streak{margin-left:auto;background:var(--card);border:1.5px solid var(--line);border-radius:12px;height:44px;padding:0 12px;font-weight:800;font-size:16px;white-space:nowrap}
+.streak.today{background:var(--tint);border-color:var(--accent);color:#F2876C}
+.streak.idle{color:var(--mute)}
+.streak.idle .fl{filter:grayscale(1);opacity:.6}
+.gear{background:var(--card);border:1.5px solid var(--line);border-radius:12px;width:44px;height:44px;font-size:20px}
+.track{height:2px;margin:12px 2px 14px;background:repeating-linear-gradient(90deg,var(--line) 0 14px,transparent 14px 22px)}
+/* cards & controls */
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 2px 0 rgba(0,0,0,.15)}
+.lbl{display:block;font-weight:800;font-size:15px;margin-bottom:8px}
+.row{display:flex;gap:8px}
+.inp{flex:1;min-width:0;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--field)}
+.inp:focus{outline:none;border-color:var(--accent)}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:11px 14px;font-weight:800;white-space:nowrap}
+.btn:active{background:#C2553B}
+.btn:disabled{opacity:.45}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.icon{padding:11px 12px;background:var(--field);border:1.5px solid var(--line);color:var(--ink)}
+.btn.icon.rec{background:var(--tint);border-color:var(--accent)}
+.btn.sm{padding:8px 11px;font-size:14px}
+.hint{font-size:12.5px;color:var(--mute);margin:8px 2px 0}
+.hint a,.link{color:#F2876C;font-weight:700;background:none;border:0;padding:0;text-decoration:underline}
+/* result */
+.res{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}
+.res .jp{font-size:26px;font-weight:700;line-height:1.3}
+.kana{font-size:13px;color:var(--mute)}
+.ro{font-size:16px;color:var(--accent);font-weight:700}
+.idn{font-size:14px}
+.res-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.loading{color:var(--mute);font-size:14px;padding:6px 0}
+.err{color:#F2876C;font-size:14px;margin:10px 0 0}
+.d-row{font-size:14px;margin-top:8px}
+.d-k{display:inline-block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin-right:6px}
+.ro-s{color:var(--accent);font-weight:600}
+.kata{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.kt{font-size:13px;background:var(--soft);border-radius:999px;padding:4px 10px}
+.kt i{color:var(--accent);font-style:normal;font-weight:600}
+.note{font-size:13.5px;background:#3A3528;border-radius:12px;padding:8px 10px;margin:8px 0 0}
+/* list toolbar */
+.tools{margin:20px 0 10px}
+.search{width:100%;padding:11px 12px 11px 38px;border-radius:12px;border:1.5px solid var(--line);background:var(--field) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%239AA3B5' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E") no-repeat 12px center}
+.search:focus{outline:none;border-color:var(--accent)}
+.seg{display:flex;background:var(--field);border:1px solid var(--line);border-radius:12px;padding:3px;margin-top:10px}
+.seg button{flex:1;border:0;background:none;border-radius:10px;padding:8px 2px;font-size:12.5px;font-weight:800;color:var(--mute)}
+.seg button.on{background:#3A4560;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.count{font-size:13px;color:var(--mute)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{font-size:12.5px;font-weight:700;border:1.5px solid var(--line);background:var(--field);border-radius:999px;padding:6px 11px;color:var(--mute)}
+.chip.on{border-color:var(--accent);color:var(--accent);background:var(--tint)}
+/* phrase card */
+.ph{display:grid;grid-template-columns:1fr auto;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:16px;margin-bottom:10px;overflow:hidden;transition:box-shadow .2s}
+.ph.fresh{border-left-color:var(--gold)}
+.ph.done{border-left-color:var(--green)}
+.ph.playing{box-shadow:0 0 0 2px var(--accent)}
+.ph-main{background:none;border:0;text-align:left;padding:12px 12px 12px 14px;display:flex;flex-direction:column;gap:1px}
+.ph-main .jp{font-size:21px;font-weight:700;line-height:1.35}
+.step{font-size:12.5px;font-weight:800;color:var(--accent)}
+.step:empty{display:none}
+.ph-side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;padding:8px 8px 6px 0;gap:4px}
+.star{background:none;border:0;font-size:20px;line-height:1;padding:4px;color:#5A6480}
+.star.on{color:var(--gold)}
+.cnt{font-size:12px;color:var(--mute);white-space:nowrap}
+.more{background:none;border:0;font-size:20px;line-height:1;color:var(--mute);padding:2px 6px}
+.ph-more{grid-column:1/-1;padding:0 14px 12px;border-top:1px dashed var(--line)}
+.meta{font-size:12px;color:var(--mute);margin-top:8px}
+.arc{margin-top:10px;margin-right:6px;background:#25392E;border:1.5px solid #3F6B4D;color:var(--green);border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700}
+.del{margin-top:10px;background:none;border:1.5px solid #6B3E36;color:#F2876C;border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700}
+.empty{color:var(--mute);font-size:14px;text-align:center;padding:24px 10px;border:1.5px dashed var(--line);border-radius:16px}
+/* player */
+.player{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:0 10px max(12px,env(safe-area-inset-bottom))}
+.pl-in{max-width:560px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-top:6px solid var(--accent);border-radius:22px;padding:16px 16px 14px;box-shadow:0 -8px 30px rgba(0,0,0,.45);text-align:center}
+.pl-top{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mute);font-weight:700}
+.pl-id{font-size:16px;margin-top:10px}
+.pl-jp{font-size:30px;font-weight:700;margin-top:6px;min-height:40px;transition:opacity .2s}
+.pl-kana{font-size:13px;color:var(--mute);min-height:17px;transition:opacity .2s}
+.pl-ro{font-size:17px;color:var(--accent);font-weight:700;min-height:22px;transition:opacity .2s}
+.hide{opacity:0}
+.pl-step{font-size:14px;font-weight:800;color:var(--accent);margin:10px 0 12px}
+/* settings sheet */
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(8,10,18,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet[hidden]{display:none}
+.sh-in{background:var(--bg);width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:22px 22px 0 0;padding:16px 16px max(18px,env(safe-area-inset-bottom))}
+.sh-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sh-head h2{font-size:19px;margin:0}
+.sh-sec{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.sh-sec h3{font-size:15px;margin:0 0 4px}
+.sh-sec p{font-size:13px;color:var(--mute);margin:4px 0 10px}
+.sh-sec label{display:block;font-size:13px;font-weight:800;margin:10px 0 6px}
+.sh-sec select,.sh-sec textarea{width:100%;padding:10px;border-radius:12px;border:1.5px solid var(--line);background:var(--field)}
+.sh-sec textarea{min-height:90px;font-size:13px;font-family:ui-monospace,Menlo,monospace}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.ok{color:var(--green);font-size:13px;font-weight:700}
+.tabs{display:flex;gap:6px;background:var(--field);border:1px solid var(--line);border-radius:14px;padding:4px;margin:0 0 14px}
+.tabs button{flex:1;border:0;background:none;border-radius:11px;padding:10px 4px;font-weight:800;font-size:15px;color:var(--mute)}
+.tabs button.on{background:#3A4560;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.cats{display:flex;gap:6px;overflow-x:auto;margin:10px -14px 4px;padding:0 14px 4px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cats .chip{flex:0 0 auto}
+.cat-h{display:flex;align-items:baseline;gap:8px;margin:18px 2px 8px;font-weight:800;font-size:15px}
+.cat-h .jpf{color:var(--accent)}
+.cat-h small{color:var(--mute);font-weight:600;font-size:12px}
+.wgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wd{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;text-align:left;display:flex;flex-direction:column;gap:1px;min-width:0}
+.wd-jp{font-size:19px;font-weight:700;line-height:1.3;word-break:keep-all}
+.wd-kana{font-size:11.5px;color:var(--mute)}
+.wd-ro{font-size:13.5px;color:var(--accent);font-weight:700}
+.wd-id{font-size:13px;line-height:1.3}
+.wd-n{font-size:11px;color:var(--mute);margin-top:3px}
+.packs-h{margin:26px 2px 4px;font-weight:800;font-size:16px}
+.packs-p{font-size:13px;color:var(--mute);margin:0 2px 10px}
+.pack{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.pack-t{font-weight:800;font-size:15px}
+.pack-s{font-size:12.5px;color:var(--mute);margin-top:2px}
+.pack .btn{margin-left:auto}
+.w-big{font-size:34px;font-weight:700;line-height:1.25}
+.badge{display:inline-block;font-size:11.5px;font-weight:800;background:var(--soft);border-radius:999px;padding:3px 9px;color:var(--mute);margin-top:6px}
+.ftable{width:100%;border-collapse:collapse;margin-top:6px}
+.ftable td{padding:8px 4px;border-top:1px dashed var(--line);font-size:14px;vertical-align:middle}
+.ftable td:first-child{color:var(--mute);font-size:12px;font-weight:800;width:72px}
+.say,.ftable .say{background:transparent;color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:4px 9px;font-size:13px}
+.lp{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px dashed var(--line)}
+.lp div{flex:1;min-width:0}
+.lp .jpf{font-weight:700}
+.lp small{display:block;color:var(--mute);font-size:12.5px}
+.kj{background:var(--card);border:1px solid var(--line);border-radius:18px;margin-bottom:12px;overflow:hidden}
+.kj-head{width:100%;display:flex;align-items:center;gap:12px;background:none;border:0;padding:12px 14px;text-align:left}
+.kj-big{font-size:40px;font-weight:700;line-height:1;width:54px;height:54px;display:flex;align-items:center;justify-content:center;background:var(--tint);border-radius:14px;color:#F2876C;flex:0 0 auto}
+.kj-lbl{font-size:11.5px;font-weight:800;color:var(--mute);letter-spacing:.04em}
+.kj-arti{font-size:16px;font-weight:800}
+.kj-chev{margin-left:auto;color:var(--mute);font-size:18px}
+.kj-body{padding:0 14px 14px}
+.kj-rd{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 6px;font-size:13.5px}
+.kj-rd b{font-size:11px;color:var(--mute);margin-right:2px}
+.kj-rd span{background:var(--soft);border-radius:999px;padding:3px 9px}
+.kj-rd i{color:var(--accent);font-style:normal;font-weight:700}
+.kj-sub{font-size:12px;font-weight:800;color:var(--mute);margin:10px 0 2px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);opacity:0;background:#F3EDE4;color:#1E2433;font-size:14px;padding:10px 16px;border-radius:12px;transition:.25s;z-index:60;max-width:90vw;text-align:center;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <header class="top">
+  <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="23" r="17" fill="#3A4560" stroke="#55628A" stroke-width="1.5"/><rect x="8" y="17" width="28" height="11" rx="5.5" fill="#FFE3C8"/><circle cx="16.5" cy="22.5" r="2.2" fill="#1E2433"/><circle cx="27.5" cy="22.5" r="2.2" fill="#1E2433"/><circle cx="17.2" cy="21.8" r=".7" fill="#fff"/><circle cx="28.2" cy="21.8" r=".7" fill="#fff"/><rect x="6" y="11" width="32" height="5" rx="2.5" fill="#E06B4F"/><path d="M37 13.5l5-4M37 14l5 2.5" stroke="#E06B4F" stroke-width="3" stroke-linecap="round"/></svg>
+  <div><div class="brand jpf">忍び日本語</div><div class="brand-ro">shinobi nihongo · latihan diam-diam tiap hari</div></div>
+  <button class="streak idle" id="streak" data-action="streak" aria-label="Streak"><span class="fl">🔥</span> <span id="streakN">0</span></button>
+  <button class="gear" data-action="open-settings" aria-label="Pengaturan">⚙️</button>
+ </header>
+ <div class="track" aria-hidden="true"></div>
+ <div class="tabs" id="tabs"><button data-action="view" data-id="frasa">💬 Frasa</button><button data-action="view" data-id="kotoba">📖 Kotoba</button></div>
+ <div id="viewFrasa">
+
+ <section id="kanji"></section>
+ <section class="card">
+  <label for="q" class="lbl">Lagi ngapain sekarang?</label>
+  <form class="row" id="askForm" autocomplete="off">
+   <input id="q" class="inp" enterkeyhint="go" placeholder="mis. aku pakai sepatu">
+   <button type="button" class="btn icon" id="mic" hidden aria-label="Bicara">🎤</button>
+   <button class="btn" type="submit">Terjemah</button>
+  </form>
+  <p class="hint" id="hint">Tip: ketuk 🎤 di keyboard iPhone untuk bicara.</p>
+  <div id="result"></div>
+ </section>
+
+ <section class="tools">
+  <input id="search" class="search" type="search" placeholder="Cari frasa (Indonesia, romaji, Jepang)">
+  <div class="seg" id="seg">
+   <button data-action="filter" data-id="due">Perlu diulang</button>
+   <button data-action="filter" data-id="new">Terbaru</button>
+   <button data-action="filter" data-id="fav">⭐ Favorit</button>
+   <button data-action="filter" data-id="done">✅ Hafal</button>
+  </div>
+  <div class="bar"><span class="count" id="count"></span><button class="btn" data-action="train" id="trainBtn">🥷 Mode Kage</button></div>
+  <div class="chips" id="chips"></div>
+ </section>
+ <section id="list"></section>
+ </div>
+ <div id="viewKotoba" hidden>
+  <input id="wsearch" class="search" type="search" placeholder="Cari kata (Indonesia, romaji, Jepang)">
+  <div class="cats" id="cats"></div>
+  <section id="wlist"></section>
+  <section id="packs"></section>
+ </div>
+</div>
+
+<div class="player" id="player" hidden></div>
+
+<div class="sheet" id="sheet" hidden>
+ <div class="sh-in" role="dialog" aria-label="Pengaturan">
+  <div class="sh-head"><h2>⚙️ Pengaturan</h2><button class="btn ghost sm" data-action="close-settings">Tutup</button></div>
+  <div class="sh-sec" id="secApi">
+   <h3>Terjemahan (API Claude)</h3>
+   <p id="apiInfo">Dipakai saat app dibuka di luar Claude, misalnya dari home screen. Key hanya disimpan di perangkat ini dan dikirim langsung ke Anthropic.</p>
+   <label for="apiKey">API key</label>
+   <div class="row"><input id="apiKey" class="inp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-..."><button class="btn icon" data-action="toggle-key" aria-label="Tampilkan key">👁</button></div>
+   <label for="model">Model</label>
+   <select id="model">
+    <option value="claude-sonnet-5-5">Sonnet 5.5 (lebih natural)</option>
+    <option value="claude-haiku-5-5">Haiku 5.5 (lebih cepat &amp; murah)</option>
+   </select>
+   <div class="btns"><button class="btn sm" data-action="save-key">Simpan</button><button class="btn ghost sm" data-action="test-key">Tes</button><button class="btn ghost sm" data-action="clear-key">Hapus key</button></div>
+   <p id="keyStatus" class="ok" style="margin-top:8px"></p>
+  </div>
+ </div>
+</div>
+<div class="sheet" id="wsheet" hidden><div class="sh-in" role="dialog" aria-label="Detail kata" id="wsheetIn"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+'use strict';
+/* ---------- data ---------- */
+var SEEDS=[
+ ['s01','起きます','おきます','okimasu','Aku bangun'],
+ ['s02','顔を洗います','かおをあらいます','kao o araimasu','Aku cuci muka'],
+ ['s03','歯を磨きます','はをみがきます','ha o migakimasu','Aku sikat gigi'],
+ ['s04','着替えます','きがえます','kigaemasu','Aku ganti baju'],
+ ['s05','朝ご飯を食べます','あさごはんをたべます','asagohan o tabemasu','Aku sarapan'],
+ ['s06','靴を履きます','くつをはきます','kutsu o hakimasu','Aku pakai sepatu','履く (haku) dipakai untuk yang dikenakan di bagian bawah badan: sepatu, celana, kaus kaki.'],
+ ['s07','鍵をかけます','かぎをかけます','kagi o kakemasu','Aku kunci pintu'],
+ ['s08','行ってきます','いってきます','ittekimasu','Aku berangkat (pamit)','Diucapkan saat keluar rumah. Yang di rumah menjawab 行ってらっしゃい (itterasshai).'],
+ ['s09','駅まで歩きます','えきまであるきます','eki made arukimasu','Aku jalan ke stasiun'],
+ ['s10','電車に乗ります','でんしゃにのります','densha ni norimasu','Aku naik kereta'],
+ ['s11','乗り換えます','のりかえます','norikaemasu','Aku ganti kereta (transit)'],
+ ['s12','会社に着きました','かいしゃにつきました','kaisha ni tsukimashita','Aku sudah sampai kantor'],
+ ['s13','おはようございます','おはようございます','ohayou gozaimasu','Selamat pagi (sopan)'],
+ ['s14','会議に出ます','かいぎにでます','kaigi ni demasu','Aku ikut meeting'],
+ ['s15','お昼を食べに行きます','おひるをたべにいきます','ohiru o tabe ni ikimasu','Aku pergi makan siang'],
+ ['s16','お先に失礼します','おさきにしつれいします','osaki ni shitsurei shimasu','Aku pulang duluan ya (pamit)','Dipakai saat pulang lebih dulu dari rekan kerja.'],
+ ['s17','ただいま','ただいま','tadaima','Aku pulang! (sampai rumah)','Dijawab dengan おかえり (okaeri).'],
+ ['s18','靴を脱ぎます','くつをぬぎます','kutsu o nugimasu','Aku lepas sepatu'],
+ ['s19','手を洗います','てをあらいます','te o araimasu','Aku cuci tangan'],
+ ['s20','お風呂に入ります','おふろにはいります','ofuro ni hairimasu','Aku mandi (berendam)'],
+ ['s21','もう寝ます','もうねます','mou nemasu','Aku tidur sekarang'],
+ ['s22','一緒に遊びましょう','いっしょにあそびましょう','issho ni asobimashou','Ayo main bareng'],
+ ['s23','ご飯ですよ','ごはんですよ','gohan desu yo','Waktunya makan!'],
+ ['s24','着替えましょう','きがえましょう','kigaemashou','Yuk ganti baju'],
+ ['s25','絵本を読みましょうか','えほんをよみましょうか','ehon o yomimashou ka','Baca buku cerita yuk?'],
+ ['s26','おやすみなさい','おやすみなさい','oyasuminasai','Selamat tidur']
+];
+var CATS=[
+ {id:'kerja',name:'Kata kerja',jp:'動詞',ro:'doushi'},
+ {id:'benda',name:'Kata benda',jp:'名詞',ro:'meishi'},
+ {id:'tempat',name:'Tempat & arah',jp:'場所',ro:'basho'},
+ {id:'waktu',name:'Waktu',jp:'時間',ro:'jikan'},
+ {id:'sifat',name:'Sifat',jp:'形容詞',ro:'keiyoushi'},
+ {id:'partikel',name:'Partikel & ungkapan',jp:'助詞',ro:'joshi'},
+ {id:'lain',name:'Lainnya',jp:'その他',ro:'sono hoka'}
+];
+var CAT={};CATS.forEach(function(c){CAT[c.id]=c});
+/* [jp, kana, romaji, arti, cat, stem, [masu,masuR,te,teR,ta,taR]] */
+var W_SEEDS=[
+ ['起きる','おきる','okiru','bangun','kerja','起き',['起きます','okimasu','起きて','okite','起きた','okita']],
+ ['洗う','あらう','arau','mencuci','kerja','洗',['洗います','araimasu','洗って','aratte','洗った','aratta']],
+ ['磨く','みがく','migaku','menggosok, menyikat','kerja','磨',['磨きます','migakimasu','磨いて','migaite','磨いた','migaita']],
+ ['着替える','きがえる','kigaeru','ganti baju','kerja','着替え',['着替えます','kigaemasu','着替えて','kigaete','着替えた','kigaeta']],
+ ['食べる','たべる','taberu','makan','kerja','食べ',['食べます','tabemasu','食べて','tabete','食べた','tabeta']],
+ ['履く','はく','haku','memakai (sepatu, celana, kaus kaki)','kerja','履',['履きます','hakimasu','履いて','haite','履いた','haita']],
+ ['かける','かける','kakeru','mengunci (鍵を〜), menggantung','kerja','かけ',['かけます','kakemasu','かけて','kakete','かけた','kaketa']],
+ ['行く','いく','iku','pergi','kerja','行',['行きます','ikimasu','行って','itte','行った','itta']],
+ ['歩く','あるく','aruku','berjalan kaki','kerja','歩',['歩きます','arukimasu','歩いて','aruite','歩いた','aruita']],
+ ['乗る','のる','noru','naik (kendaraan)','kerja','乗',['乗ります','norimasu','乗って','notte','乗った','notta']],
+ ['乗り換える','のりかえる','norikaeru','ganti kendaraan, transit','kerja','乗り換え',['乗り換えます','norikaemasu','乗り換えて','norikaete','乗り換えた','norikaeta']],
+ ['着く','つく','tsuku','tiba, sampai','kerja','着き',['着きます','tsukimasu','着いて','tsuite','着いた','tsuita']],
+ ['出る','でる','deru','keluar; ikut (rapat)','kerja','出',['出ます','demasu','出て','dete','出た','deta']],
+ ['脱ぐ','ぬぐ','nugu','melepas (pakaian, sepatu)','kerja','脱',['脱ぎます','nugimasu','脱いで','nuide','脱いだ','nuida']],
+ ['入る','はいる','hairu','masuk','kerja','入',['入ります','hairimasu','入って','haitte','入った','haitta']],
+ ['寝る','ねる','neru','tidur','kerja','寝',['寝ます','nemasu','寝て','nete','寝た','neta']],
+ ['遊ぶ','あそぶ','asobu','bermain','kerja','遊',['遊びます','asobimasu','遊んで','asonde','遊んだ','asonda']],
+ ['読む','よむ','yomu','membaca','kerja','読',['読みます','yomimasu','読んで','yonde','読んだ','yonda']],
+ ['顔','かお','kao','muka, wajah','benda'],
+ ['歯','は','ha','gigi','benda'],
+ ['ご飯','ごはん','gohan','nasi; makan','benda'],
+ ['靴','くつ','kutsu','sepatu','benda'],
+ ['鍵','かぎ','kagi','kunci','benda'],
+ ['電車','でんしゃ','densha','kereta','benda'],
+ ['会議','かいぎ','kaigi','rapat, meeting','benda'],
+ ['手','て','te','tangan','benda'],
+ ['お風呂','おふろ','ofuro','bak mandi; mandi berendam','benda'],
+ ['絵本','えほん','ehon','buku cerita bergambar','benda'],
+ ['駅','えき','eki','stasiun','tempat'],
+ ['会社','かいしゃ','kaisha','kantor, perusahaan','tempat'],
+ ['朝','あさ','asa','pagi','waktu'],
+ ['お昼','おひる','ohiru','siang; makan siang','waktu'],
+ ['もう','もう','mou','sudah; sekarang juga','waktu'],
+ ['先に','さきに','saki ni','lebih dulu','waktu','先に'],
+ ['を','を','o','partikel objek (yang dikenai kegiatan)','partikel'],
+ ['に','に','ni','partikel tujuan/tempat/waktu: ke, di, pada','partikel'],
+ ['まで','まで','made','sampai, hingga (tempat/waktu)','partikel'],
+ ['ね','ね','ne','ya / kan (mengajak, melunakkan)','partikel','ね'],
+ ['一緒に','いっしょに','issho ni','bersama-sama','lain','一緒']
+];
+var PACKS=[
+ {id:'arah',name:'Arah & tempat',jp:'方向',ro:'houkou',words:[
+  ['右','みぎ','migi','kanan','tempat'],['左','ひだり','hidari','kiri','tempat'],['まっすぐ','まっすぐ','massugu','lurus','tempat'],
+  ['前','まえ','mae','depan; sebelum','tempat'],['後ろ','うしろ','ushiro','belakang','tempat'],['上','うえ','ue','atas','tempat'],
+  ['下','した','shita','bawah','tempat'],['近く','ちかく','chikaku','dekat, sekitar','tempat'],['ここ','ここ','koko','sini','tempat'],
+  ['そこ','そこ','soko','situ','tempat'],['あそこ','あそこ','asoko','sana','tempat']]},
+ {id:'waktu',name:'Waktu',jp:'時間',ro:'jikan',words:[
+  ['今','いま','ima','sekarang','waktu'],['今日','きょう','kyou','hari ini','waktu'],['明日','あした','ashita','besok','waktu'],
+  ['昨日','きのう','kinou','kemarin','waktu'],['毎日','まいにち','mainichi','setiap hari','waktu'],['夜','よる','yoru','malam','waktu'],
+  ['後で','あとで','ato de','nanti','waktu'],['週末','しゅうまつ','shuumatsu','akhir pekan','waktu']]},
+ {id:'sifat',name:'Sifat sehari-hari',jp:'形容詞',ro:'keiyoushi',words:[
+  ['暑い','あつい','atsui','panas (cuaca)','sifat'],['寒い','さむい','samui','dingin (cuaca)','sifat'],['おいしい','おいしい','oishii','enak','sifat'],
+  ['高い','たかい','takai','mahal; tinggi','sifat'],['安い','やすい','yasui','murah','sifat'],['忙しい','いそがしい','isogashii','sibuk','sifat'],
+  ['眠い','ねむい','nemui','mengantuk','sifat'],['大丈夫','だいじょうぶ','daijoubu','tidak apa-apa, aman','sifat']]},
+ {id:'kerja',name:'Kata kerja dasar',jp:'動詞',ro:'doushi',words:[
+  ['見る','みる','miru','melihat, menonton','kerja','見',['見ます','mimasu','見て','mite','見た','mita']],
+  ['飲む','のむ','nomu','minum','kerja','飲',['飲みます','nomimasu','飲んで','nonde','飲んだ','nonda']],
+  ['買う','かう','kau','membeli','kerja','買',['買います','kaimasu','買って','katte','買った','katta']],
+  ['待つ','まつ','matsu','menunggu','kerja','待',['待ちます','machimasu','待って','matte','待った','matta']],
+  ['帰る','かえる','kaeru','pulang','kerja','帰',['帰ります','kaerimasu','帰って','kaette','帰った','kaetta']],
+  ['来る','くる','kuru','datang','kerja','来',['来ます','kimasu','来て','kite','来た','kita']],
+  ['する','する','suru','melakukan','kerja','し',['します','shimasu','して','shite','した','shita']],
+  ['話す','はなす','hanasu','berbicara','kerja','話',['話します','hanashimasu','話して','hanashite','話した','hanashita']],
+  ['分かる','わかる','wakaru','mengerti','kerja','分か',['分かります','wakarimasu','分かって','wakatte','分かった','wakatta']]]}
+];
+var KANJI=[
+ ['人','orang',[['ひと','hito']],[['ジン','jin'],['ニン','nin']],[['日本人','にほんじん','nihonjin','orang Jepang'],['三人','さんにん','sannin','tiga orang']]],
+ ['日','hari; matahari',[['ひ','hi'],['か','ka']],[['ニチ','nichi'],['ジツ','jitsu']],[['日曜日','にちようび','nichiyoubi','hari Minggu'],['毎日','まいにち','mainichi','setiap hari']]],
+ ['月','bulan',[['つき','tsuki']],[['ゲツ','getsu'],['ガツ','gatsu']],[['月曜日','げつようび','getsuyoubi','hari Senin'],['一月','いちがつ','ichigatsu','Januari']]],
+ ['火','api',[['ひ','hi']],[['カ','ka']],[['火曜日','かようび','kayoubi','hari Selasa'],['火事','かじ','kaji','kebakaran']]],
+ ['水','air',[['みず','mizu']],[['スイ','sui']],[['水','みず','mizu','air'],['水曜日','すいようび','suiyoubi','hari Rabu']]],
+ ['木','pohon; kayu',[['き','ki']],[['モク','moku']],[['木','き','ki','pohon'],['木曜日','もくようび','mokuyoubi','hari Kamis']]],
+ ['金','emas; uang',[['かね','kane']],[['キン','kin']],[['お金','おかね','okane','uang'],['金曜日','きんようび','kin\'youbi','hari Jumat']]],
+ ['土','tanah',[['つち','tsuchi']],[['ド','do']],[['土曜日','どようび','doyoubi','hari Sabtu'],['土','つち','tsuchi','tanah']]],
+ ['今','sekarang',[['いま','ima']],[['コン','kon']],[['今','いま','ima','sekarang'],['今週','こんしゅう','konshuu','minggu ini']]],
+ ['何','apa',[['なに','nani'],['なん','nan']],[['カ','ka']],[['何','なに','nani','apa'],['何時','なんじ','nanji','jam berapa']]],
+ ['時','waktu; jam',[['とき','toki']],[['ジ','ji']],[['時間','じかん','jikan','waktu'],['何時','なんじ','nanji','jam berapa']]],
+ ['分','menit; mengerti',[['わ(かる)','wa(karu)']],[['フン','fun'],['ブン','bun']],[['分かります','わかります','wakarimasu','mengerti'],['五分','ごふん','gofun','lima menit']]],
+ ['年','tahun',[['とし','toshi']],[['ネン','nen']],[['今年','ことし','kotoshi','tahun ini'],['来年','らいねん','rainen','tahun depan']]],
+ ['週','minggu (pekan)',[],[['シュウ','shuu']],[['今週','こんしゅう','konshuu','minggu ini'],['週末','しゅうまつ','shuumatsu','akhir pekan']]],
+ ['午','tengah hari',[],[['ゴ','go']],[['午前','ごぜん','gozen','pagi (AM)'],['午後','ごご','gogo','siang/sore (PM)']]],
+ ['前','depan; sebelum',[['まえ','mae']],[['ゼン','zen']],[['前','まえ','mae','depan'],['名前','なまえ','namae','nama']]],
+ ['後','belakang; sesudah',[['うし(ろ)','ushi(ro)'],['あと','ato']],[['ゴ','go']],[['後ろ','うしろ','ushiro','belakang'],['後で','あとで','ato de','nanti']]],
+ ['上','atas',[['うえ','ue']],[['ジョウ','jou']],[['上','うえ','ue','atas'],['上手','じょうず','jouzu','pandai']]],
+ ['下','bawah',[['した','shita']],[['カ','ka'],['ゲ','ge']],[['下','した','shita','bawah'],['地下鉄','ちかてつ','chikatetsu','kereta bawah tanah']]],
+ ['中','tengah; dalam',[['なか','naka']],[['チュウ','chuu']],[['中','なか','naka','dalam'],['中国','ちゅうごく','chuugoku','Tiongkok']]],
+ ['大','besar',[['おお(きい)','oo(kii)']],[['ダイ','dai'],['タイ','tai']],[['大きい','おおきい','ookii','besar'],['大丈夫','だいじょうぶ','daijoubu','tidak apa-apa']]],
+ ['小','kecil',[['ちい(さい)','chii(sai)']],[['ショウ','shou']],[['小さい','ちいさい','chiisai','kecil'],['小学校','しょうがっこう','shougakkou','SD']]],
+ ['右','kanan',[['みぎ','migi']],[['ウ','u']],[['右','みぎ','migi','kanan'],['右側','みぎがわ','migigawa','sisi kanan']]],
+ ['左','kiri',[['ひだり','hidari']],[['サ','sa']],[['左','ひだり','hidari','kiri'],['左側','ひだりがわ','hidarigawa','sisi kiri']]],
+ ['口','mulut; pintu',[['くち','kuchi']],[['コウ','kou']],[['出口','でぐち','deguchi','pintu keluar'],['入口','いりぐち','iriguchi','pintu masuk']]],
+ ['出','keluar',[['で(る)','de(ru)']],[['シュツ','shutsu']],[['出口','でぐち','deguchi','pintu keluar'],['出発','しゅっぱつ','shuppatsu','keberangkatan']]],
+ ['入','masuk',[['はい(る)','hai(ru)'],['い(る)','i(ru)']],[['ニュウ','nyuu']],[['入口','いりぐち','iriguchi','pintu masuk'],['入ります','はいります','hairimasu','masuk']]],
+ ['東','timur',[['ひがし','higashi']],[['トウ','tou']],[['東京','とうきょう','toukyou','Tokyo'],['東口','ひがしぐち','higashiguchi','pintu timur']]],
+ ['西','barat',[['にし','nishi']],[['セイ','sei'],['サイ','sai']],[['西口','にしぐち','nishiguchi','pintu barat'],['関西','かんさい','kansai','Kansai']]],
+ ['南','selatan',[['みなみ','minami']],[['ナン','nan']],[['南口','みなみぐち','minamiguchi','pintu selatan'],['南','みなみ','minami','selatan']]],
+ ['北','utara',[['きた','kita']],[['ホク','hoku']],[['北口','きたぐち','kitaguchi','pintu utara'],['北','きた','kita','utara']]],
+ ['行','pergi',[['い(く)','i(ku)']],[['コウ','kou']],[['行きます','いきます','ikimasu','pergi'],['銀行','ぎんこう','ginkou','bank']]],
+ ['来','datang',[['く(る)','ku(ru)']],[['ライ','rai']],[['来ます','きます','kimasu','datang'],['来週','らいしゅう','raishuu','minggu depan']]],
+ ['見','melihat',[['み(る)','mi(ru)']],[['ケン','ken']],[['見ます','みます','mimasu','melihat'],['見学','けんがく','kengaku','kunjungan belajar']]],
+ ['食','makan',[['た(べる)','ta(beru)']],[['ショク','shoku']],[['食べます','たべます','tabemasu','makan'],['食事','しょくじ','shokuji','acara makan']]],
+ ['飲','minum',[['の(む)','no(mu)']],[['イン','in']],[['飲みます','のみます','nomimasu','minum'],['飲み物','のみもの','nomimono','minuman']]],
+ ['言','berkata',[['い(う)','i(u)']],[['ゲン','gen']],[['言います','いいます','iimasu','berkata'],['言葉','ことば','kotoba','kata, bahasa']]],
+ ['話','berbicara',[['はな(す)','hana(su)']],[['ワ','wa']],[['話します','はなします','hanashimasu','berbicara'],['電話','でんわ','denwa','telepon']]],
+ ['読','membaca',[['よ(む)','yo(mu)']],[['ドク','doku']],[['読みます','よみます','yomimasu','membaca'],['読書','どくしょ','dokusho','membaca buku']]],
+ ['書','menulis',[['か(く)','ka(ku)']],[['ショ','sho']],[['書きます','かきます','kakimasu','menulis'],['辞書','じしょ','jisho','kamus']]],
+ ['聞','mendengar; bertanya',[['き(く)','ki(ku)']],[['ブン','bun']],[['聞きます','ききます','kikimasu','mendengar; bertanya'],['新聞','しんぶん','shinbun','koran']]],
+ ['買','membeli',[['か(う)','ka(u)']],[['バイ','bai']],[['買います','かいます','kaimasu','membeli'],['買い物','かいもの','kaimono','belanja']]],
+ ['休','istirahat; libur',[['やす(む)','yasu(mu)']],[['キュウ','kyuu']],[['休みます','やすみます','yasumimasu','istirahat; libur'],['休日','きゅうじつ','kyuujitsu','hari libur']]],
+ ['駅','stasiun',[],[['エキ','eki']],[['駅','えき','eki','stasiun'],['駅員','えきいん','ekiin','petugas stasiun']]],
+ ['電','listrik',[],[['デン','den']],[['電車','でんしゃ','densha','kereta'],['電話','でんわ','denwa','telepon']]],
+ ['車','mobil; kendaraan',[['くるま','kuruma']],[['シャ','sha']],[['車','くるま','kuruma','mobil'],['電車','でんしゃ','densha','kereta']]],
+ ['道','jalan',[['みち','michi']],[['ドウ','dou']],[['道','みち','michi','jalan'],['北海道','ほっかいどう','hokkaidou','Hokkaido']]],
+ ['店','toko',[['みせ','mise']],[['テン','ten']],[['店','みせ','mise','toko'],['店員','てんいん','ten\'in','pelayan toko']]],
+ ['会','bertemu',[['あ(う)','a(u)']],[['カイ','kai']],[['会います','あいます','aimasu','bertemu'],['会社','かいしゃ','kaisha','perusahaan']]],
+ ['社','perusahaan; kuil',[['やしろ','yashiro']],[['シャ','sha']],[['会社','かいしゃ','kaisha','perusahaan'],['社長','しゃちょう','shachou','direktur']]],
+ ['学','belajar',[['まな(ぶ)','mana(bu)']],[['ガク','gaku']],[['学校','がっこう','gakkou','sekolah'],['大学','だいがく','daigaku','universitas']]],
+ ['生','hidup; lahir',[['い(きる)','i(kiru)'],['う(まれる)','u(mareru)']],[['セイ','sei']],[['先生','せんせい','sensei','guru'],['学生','がくせい','gakusei','pelajar']]],
+ ['先','depan; lebih dulu',[['さき','saki']],[['セン','sen']],[['先生','せんせい','sensei','guru'],['先週','せんしゅう','senshuu','minggu lalu']]],
+ ['名','nama',[['な','na']],[['メイ','mei']],[['名前','なまえ','namae','nama'],['有名','ゆうめい','yuumei','terkenal']]],
+ ['円','yen; bulat',[['まる(い)','maru(i)']],[['エン','en']],[['百円','ひゃくえん','hyakuen','100 yen'],['千円','せんえん','sen\'en','1.000 yen']]],
+ ['男','laki-laki',[['おとこ','otoko']],[['ダン','dan']],[['男の人','おとこのひと','otoko no hito','pria'],['男性','だんせい','dansei','laki-laki (formal)']]],
+ ['女','perempuan',[['おんな','onna']],[['ジョ','jo']],[['女の人','おんなのひと','onna no hito','wanita'],['女性','じょせい','josei','perempuan (formal)']]],
+ ['子','anak',[['こ','ko']],[['シ','shi']],[['子ども','こども','kodomo','anak'],['お菓子','おかし','okashi','camilan']]],
+ ['手','tangan',[['て','te']],[['シュ','shu']],[['手','て','te','tangan'],['上手','じょうず','jouzu','pandai']]],
+ ['目','mata',[['め','me']],[['モク','moku']],[['目','め','me','mata'],['目的','もくてき','mokuteki','tujuan']]],
+ ['間','antara; selang',[['あいだ','aida']],[['カン','kan']],[['時間','じかん','jikan','waktu'],['間','あいだ','aida','di antara']]]
+];
+var KEY='kotoba-densha-v2',KEY_API='kotoba-densha-api';
+var now0=Date.now();
+function seedData(){
+ return {v:2,phrases:SEEDS.map(function(s,i){return {id:s[0],jp:s[1],kana:s[2],romaji:s[3],arti:s[4],catatan:s[5]||'',created:now0-(SEEDS.length-i)*60000,count:0,last:0,fav:false}}),
+  settings:{guess:true,loop:false,filter:'due'}};
+}
+var data=null;
+try{data=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+if(!data||!Array.isArray(data.phrases)){data=seedData();save()}
+data.settings=Object.assign({guess:true,loop:false,filter:'due',view:'frasa',cat:'all'},data.settings||{});
+function wid(){return 'w'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function mkWord(a,src){
+ var f=a[6];
+ return {id:wid(),jp:a[0],kana:a[1]||'',romaji:a[2]||'',arti:a[3]||'',cat:CAT[a[4]]?a[4]:'lain',stem:a[5]||a[0],
+  forms:f?{masu:{jp:f[0],romaji:f[1]},te:{jp:f[2],romaji:f[3]},ta:{jp:f[4],romaji:f[5]}}:null,created:Date.now(),src:src||''};
+}
+function fromKata(k){
+ return {id:wid(),jp:k.jp,kana:k.kana||'',romaji:k.romaji||'',arti:k.arti||'',cat:CAT[k.cat]?k.cat:'lain',stem:k.stem||k.jp,forms:k.forms||null,created:Date.now(),src:'frasa'};
+}
+function upsertWord(w){
+ if(!w||!w.jp)return false;
+ for(var i=0;i<data.words.length;i++){var x=data.words[i];if(x.jp===w.jp){
+  if(!x.forms&&w.forms)x.forms=w.forms;if(!x.kana&&w.kana)x.kana=w.kana;if(!x.romaji&&w.romaji)x.romaji=w.romaji;if(!x.arti&&w.arti)x.arti=w.arti;
+  return false}}
+ data.words.push(w);return true;
+}
+(function(){var FIX={s22:["一緒に遊びましょう", "いっしょにあそびましょう", "issho ni asobimashou", "Ayo main bareng"],s23:["ご飯ですよ", "ごはんですよ", "gohan desu yo", "Waktunya makan!"],s24:["着替えましょう", "きがえましょう", "kigaemashou", "Yuk ganti baju"],s25:["絵本を読みましょうか", "えほんをよみましょうか", "ehon o yomimashou ka", "Baca buku cerita yuk?"],s26:["おやすみなさい", "おやすみなさい", "oyasuminasai", "Selamat tidur"]};
+ var OLD={s22:'一緒に遊ぼう',s23:'ご飯だよ',s24:'お着替えしようね',s25:'絵本を読もうか',s26:'おやすみ'},ch=false;
+ data.phrases.forEach(function(p){var f=FIX[p.id];if(f&&p.jp===OLD[p.id]){p.jp=f[0];p.kana=f[1];p.romaji=f[2];ch=true}});
+ if(ch)save();})();
+if(!Array.isArray(data.words)){
+ data.words=[];W_SEEDS.forEach(function(a){upsertWord(mkWord(a,'seed'))});
+ data.phrases.forEach(function(p){(p.kata||[]).forEach(function(k){if(k&&k.cat)upsertWord(fromKata(k))})});
+ save();
+}
+if(!Array.isArray(data.packs))data.packs=[];
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+/* streak */
+function pad(n){return (n<10?'0':'')+n}
+function fmt(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function streak(){
+ var set={};(data.days||[]).forEach(function(x){set[x]=1});
+ var d=new Date(),doneToday=!!set[fmt(d)],n=0;
+ if(!doneToday)d.setDate(d.getDate()-1);
+ while(set[fmt(d)]){n++;d.setDate(d.getDate()-1)}
+ return {n:n,doneToday:doneToday};
+}
+function renderStreak(){
+ var s=streak(),b=document.getElementById('streak');if(!b)return;
+ document.getElementById('streakN').textContent=s.n;
+ b.className='streak '+(s.doneToday?'today':'idle');
+}
+function markDay(){
+ var t=fmt(new Date());data.days=data.days||[];
+ if(data.days.indexOf(t)>=0)return;
+ data.days.push(t);if(data.days.length>400)data.days=data.days.slice(-400);
+ var s=streak().n;if(s>(data.best||0))data.best=s;save();renderStreak();
+ toast(s>1?'🔥 Streak '+s+' hari! Lanjutkan':'🔥 Streak dimulai! Sampai jumpa besok');
+}
+var api={key:'',model:'claude-sonnet-5-5'};
+try{var a0=JSON.parse(localStorage.getItem(KEY_API)||'null');if(a0)api=Object.assign(api,a0)}catch(e){}
+function saveApi(){try{localStorage.setItem(KEY_API,JSON.stringify(api))}catch(e){}}
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function $(id){return document.getElementById(id)}
+function byId(id){if(id==='result')return currentResult;for(var i=0;i<data.phrases.length;i++)if(data.phrases[i].id===id)return data.phrases[i];return null}
+var toastT;
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show')},2600)}
+function ago(ts){if(!ts)return 'belum pernah';var d=Math.floor((Date.now()-ts)/86400000);return d<=0?'hari ini':d===1?'kemarin':d+' hari lalu'}
+
+/* ---------- list ---------- */
+var searchQ='',ACTIVE_MAX=10,queued=0;
+function view(){
+ var f=data.settings.filter,q=searchQ.trim().toLowerCase();
+ var ps=data.phrases.filter(function(p){
+  if(f==='done'?!p.archived:p.archived)return false;
+  if(f==='fav'&&!p.fav)return false;
+  if(!q)return true;
+  return [p.jp,p.kana,p.romaji,p.arti].join(' ').toLowerCase().indexOf(q)>=0;
+ });
+ queued=0;
+ if(f==='due'){
+  if(!q){ps.sort(function(a,b){return (a.created||0)-(b.created||0)});queued=Math.max(0,ps.length-ACTIVE_MAX);ps=ps.slice(0,ACTIVE_MAX)}
+  ps.sort(function(a,b){return (a.count||0)-(b.count||0)||(a.last||0)-(b.last||0)||(a.created||0)-(b.created||0)});
+ }
+ else ps.sort(function(a,b){return (b.created||0)-(a.created||0)});
+ return ps;
+}
+function detailHtml(p){
+ var h='';
+ if(p.kata&&p.kata.length)h+='<div class="kata">'+p.kata.map(function(k){return '<span class="kt"><b class="jpf">'+esc(k.jp)+'</b> <i>'+esc(k.romaji)+'</i> · '+esc(k.arti)+'</span>'}).join('')+'</div>';
+ if(p.catatan)h+='<p class="note">💡 '+esc(p.catatan)+'</p>';
+ return h;
+}
+function cardHtml(p){
+ var id=esc(p.id),c=p.count||0,cls=c===0?' fresh':c>=10?' done':'';
+ return '<article class="ph'+cls+'" data-card="'+id+'">'+
+  '<button class="ph-main" data-action="play" data-id="'+id+'">'+
+   '<span class="jp jpf">'+esc(p.jp)+'</span>'+(p.kana&&p.kana!==p.jp?'<span class="kana jpf">'+esc(p.kana)+'</span>':'')+
+   '<span class="ro">'+esc(p.romaji)+'</span><span class="idn">'+esc(p.arti)+'</span><span class="step"></span></button>'+
+  '<div class="ph-side"><button class="star'+(p.fav?' on':'')+'" data-action="fav" data-id="'+id+'" aria-label="Favorit">'+(p.fav?'★':'☆')+'</button>'+
+   '<span class="cnt">🔁 <b>'+c+'</b>x</span><button class="more" data-action="more" aria-label="Detail">⋯</button></div>'+
+  '<div class="ph-more" hidden>'+detailHtml(p)+'<div class="meta">Terakhir diulang: '+ago(p.last)+'</div><button class="arc" data-action="archive" data-id="'+id+'">'+(p.archived?'↩︎ Kembalikan ke daftar':'✅ Sudah hafal')+'</button><button class="del" data-action="del" data-id="'+id+'">Hapus</button></div>'+
+ '</article>';
+}
+function renderTools(){
+ Array.prototype.forEach.call($('seg').children,function(b){b.classList.toggle('on',b.getAttribute('data-id')===data.settings.filter)});
+ $('chips').innerHTML='<button class="chip'+(data.settings.guess?' on':'')+'" data-action="tg-guess">Tebak dulu (arti → Jepang)</button><button class="chip'+(data.settings.loop?' on':'')+'" data-action="tg-loop">Ulang terus</button>';
+}
+function renderList(){
+ var ps=view();
+ $('count').textContent=(data.settings.filter==='due'&&!searchQ.trim())?ps.length+' frasa aktif'+(queued?' · '+queued+' antre':'')+(queued?' · tandai ✅ Hafal agar frasa berikutnya masuk':''):ps.length+' frasa';
+ $('trainBtn').disabled=!ps.length;
+ $('list').innerHTML=ps.length?ps.map(cardHtml).join(''):
+  '<p class="empty">'+(searchQ?'Tidak ada frasa yang cocok.':data.settings.filter==='fav'?'Belum ada favorit.<br>Ketuk ☆ di frasa untuk menandainya.':data.settings.filter==='done'?'Belum ada frasa yang hafal.<br>Buka ⋯ di frasa yang sudah hafal, lalu ketuk ✅ Sudah hafal.':'Belum ada frasa. Ketik kegiatanmu di atas.')+'</p>';
+}
+
+/* ---------- kanji ---------- */
+var kjOpen=null;
+function kanjiState(){
+ data.kanji=data.kanji||{known:[],day:'',cur:''};var k=data.kanji,t=fmt(new Date());
+ if(k.day!==t){var nx=KANJI.filter(function(x){return k.known.indexOf(x[0])<0})[0];k.day=t;k.cur=nx?nx[0]:'';k.doneToday=false;save();kjOpen=null}
+ return k;
+}
+function nextKanji(){var k=data.kanji;var nx=KANJI.filter(function(x){return k.known.indexOf(x[0])<0})[0];k.cur=nx?nx[0]:'';k.doneToday=false;save();kjOpen=true;renderKanji()}
+function renderKanji(){
+ var k=kanjiState(),el=$('kanji');
+ var item=KANJI.filter(function(x){return x[0]===k.cur})[0];
+ if(!item){el.innerHTML='<div class="kj"><div class="kj-head"><div class="kj-big jpf">🎉</div><div><div class="kj-lbl">漢字 KANJI HARI INI</div><div class="kj-arti">Semua '+KANJI.length+' kanji umum sudah kamu kenal!</div></div></div></div>';return}
+ var open=kjOpen===null?!k.doneToday:kjOpen;
+ var rd=function(lbl,arr){return arr.length?'<div class="kj-rd"><b>'+lbl+'</b>'+arr.map(function(r){return '<span><span class="jpf">'+esc(r[0])+'</span> <i>'+esc(r[1])+'</i></span>'}).join('')+'</div>':''};
+ var mine=data.phrases.filter(function(p){return p.jp&&p.jp.indexOf(item[0])>=0}).slice(0,3);
+ var h='<div class="kj"><button class="kj-head" data-action="kj-toggle"><div class="kj-big jpf">'+item[0]+'</div><div><div class="kj-lbl">漢字 KANJI HARI INI · '+(k.known.length)+'/'+KANJI.length+' dikenal</div><div class="kj-arti">'+esc(item[1])+(k.doneToday?' ✅':'')+'</div></div><span class="kj-chev">'+(open?'▴':'▾')+'</span></button>';
+ if(open){
+  h+='<div class="kj-body">'+rd('KUN',item[2])+rd('ON',item[3])+'<div class="kj-sub">Contoh kata</div>'+
+   item[4].map(function(e){return '<div class="lp"><div><span class="jpf">'+esc(e[0])+'</span> <span class="kana jpf">'+(e[1]!==e[0]?esc(e[1]):'')+'</span><small>'+esc(e[2])+' · '+esc(e[3])+'</small></div><button class="say" data-action="say" data-text="'+esc(e[0])+'">▶</button></div>'}).join('')+
+   (mine.length?'<div class="kj-sub">Di frasamu</div>'+mine.map(function(p){return '<div class="lp"><div><span class="jpf">'+esc(p.jp)+'</span><small>'+esc(p.romaji)+' · '+esc(p.arti)+'</small></div><button class="say" data-action="say" data-text="'+esc(p.jp)+'">▶</button></div>'}).join(''):'')+
+   '<div class="btns">'+(k.doneToday?'<span class="hint" style="align-self:center">Kanji berikutnya besok 🥷</span><button class="btn ghost sm" data-action="kj-more">Satu lagi</button>':'<button class="btn sm" data-action="kj-known">✅ Sudah kenal</button>')+'</div></div>';
+ }
+ el.innerHTML=h+'</div>';
+}
+
+/* ---------- kotoba ---------- */
+var wSearch='';
+function wordById(id){for(var i=0;i<data.words.length;i++)if(data.words[i].id===id)return data.words[i];return null}
+function polite(w){
+ if(w.forms&&w.forms.masu&&w.forms.masu.jp)return {jp:w.forms.masu.jp,romaji:w.forms.masu.romaji,kamus:true};
+ return {jp:w.jp,romaji:w.romaji,kamus:false};
+}
+function politeRows(w){
+ var m=w.forms.masu,t=w.forms.te,rows=[['〜ます','sopan',m.jp,m.romaji]];
+ if(/ます$/.test(m.jp)){
+  rows.push(['〜ました','sudah',m.jp.replace(/ます$/,'ました'),m.romaji.replace(/masu$/,'mashita')]);
+  rows.push(['〜ません','tidak',m.jp.replace(/ます$/,'ません'),m.romaji.replace(/masu$/,'masen')]);
+  rows.push(['〜ましょう','ayo',m.jp.replace(/ます$/,'ましょう'),m.romaji.replace(/masu$/,'mashou')]);
+ }
+ if(t&&t.jp)rows.push(['〜てください','tolong',t.jp+'ください',t.romaji+' kudasai']);
+ return rows;
+}
+function phrasesFor(w){var s=w.stem||w.jp;return data.phrases.filter(function(p){return p.jp&&p.jp.indexOf(s)>=0})}
+function setView(v){
+ data.settings.view=v;save();
+ Array.prototype.forEach.call($('tabs').children,function(b){b.classList.toggle('on',b.getAttribute('data-id')===v)});
+ $('viewFrasa').hidden=v!=='frasa';$('viewKotoba').hidden=v!=='kotoba';
+ if(v==='kotoba')renderWords();
+}
+function renderWords(){
+ var q=wSearch.trim().toLowerCase(),c=data.settings.cat;
+ var match=data.words.filter(function(w){return !q||[w.jp,w.kana,w.romaji,w.arti].join(' ').toLowerCase().indexOf(q)>=0});
+ var counts={};match.forEach(function(w){counts[w.cat]=(counts[w.cat]||0)+1});
+ $('cats').innerHTML='<button class="chip'+(c==='all'?' on':'')+'" data-action="cat" data-id="all">Semua '+match.length+'</button>'+
+  CATS.filter(function(x){return counts[x.id]}).map(function(x){return '<button class="chip'+(c===x.id?' on':'')+'" data-action="cat" data-id="'+x.id+'">'+x.name+' '+counts[x.id]+'</button>'}).join('');
+ var html='';
+ CATS.forEach(function(x){
+  if(c!=='all'&&c!==x.id)return;
+  var ws=match.filter(function(w){return w.cat===x.id});if(!ws.length)return;
+  ws.sort(function(a,b){return (b.created||0)-(a.created||0)});
+  html+='<div class="cat-h">'+x.name+' <span class="jpf">'+x.jp+'</span><small>'+x.ro+' · '+ws.length+'</small></div><div class="wgrid">'+
+   ws.map(function(w){var n=phrasesFor(w).length;
+    return '<button class="wd" data-action="word" data-id="'+esc(w.id)+'"><span class="wd-jp jpf">'+esc(polite(w).jp)+'</span>'+(polite(w).kamus?'':(w.kana&&w.kana!==w.jp?'<span class="wd-kana jpf">'+esc(w.kana)+'</span>':''))+
+     '<span class="wd-ro">'+esc(polite(w).romaji)+'</span><span class="wd-id">'+esc(w.arti)+'</span><span class="wd-n">'+(n?'💬 '+n+' frasa':'belum ada di frasamu')+'</span></button>'}).join('')+'</div>';
+ });
+ $('wlist').innerHTML=html||'<p class="empty" style="margin-top:14px">'+(q?'Tidak ada kata yang cocok.':'Belum ada kata.')+'</p>';
+ $('packs').innerHTML=q?'':'<div class="packs-h">📦 Paket kata awal</div><p class="packs-p">Kata yang sering dibutuhkan saat ngobrol. Tambahkan dengan satu ketukan.</p>'+
+  PACKS.map(function(pk){var added=data.packs.indexOf(pk.id)>=0;
+   return '<div class="pack"><div><div class="pack-t">'+pk.name+' <span class="jpf" style="color:var(--accent)">'+pk.jp+'</span> <small style="color:var(--mute)">'+pk.ro+'</small></div>'+
+    '<div class="pack-s jpf">'+pk.words.slice(0,4).map(function(w){return esc(w[0])}).join('・')+'… ('+pk.words.length+' kata)</div></div>'+
+    (added?'<button class="btn ghost sm" disabled>✓ Ditambah</button>':'<button class="btn sm" data-action="pack" data-id="'+pk.id+'">+ Tambah</button>')+'</div>'}).join('');
+}
+function addPack(id){
+ var pk=PACKS.filter(function(x){return x.id===id})[0];if(!pk)return;
+ var n=0;pk.words.forEach(function(a){if(upsertWord(mkWord(a,'pack:'+id)))n++});
+ if(data.packs.indexOf(id)<0)data.packs.push(id);save();renderWords();toast('+'+n+' kata ditambahkan ✓');
+}
+function openWord(id){
+ var w=wordById(id);if(!w)return;var c=CAT[w.cat]||CAT.lain,ps=phrasesFor(w);
+ var h='<div class="sh-head"><span class="badge">'+c.name+' · '+c.jp+' '+c.ro+'</span><button class="btn ghost sm" data-action="close-word">Tutup</button></div>'+
+  '<div class="sh-sec"><div class="w-big jpf">'+esc(polite(w).jp)+'</div>'+(polite(w).kamus?'':(w.kana&&w.kana!==w.jp?'<div class="kana jpf">'+esc(w.kana)+'</div>':''))+
+  '<div class="ro">'+esc(polite(w).romaji)+'</div><div class="idn">'+esc(w.arti)+'</div>'+
+  '<div class="btns"><button class="btn sm" data-action="wplay" data-id="'+esc(w.id)+'">▶ Dengar</button></div></div>';
+ if(w.forms){
+  var rows=politeRows(w).map(function(r){return [r[0]+'<br><span style="font-weight:600">'+r[1]+'</span>',r[2],r[3]]});
+  h+='<div class="sh-sec"><h3>Pola kaiwa</h3><p>Bentuk sopan yang paling sering dipakai saat bicara. Bentuk kamus: <span class="jpf">'+esc(w.jp)+'</span> <i>'+esc(w.romaji)+'</i></p><table class="ftable">'+
+   rows.filter(function(r){return r[1]}).map(function(r){return '<tr><td>'+r[0]+'</td><td><span class="jpf" style="font-weight:700">'+esc(r[1])+'</span><br><span class="ro-s">'+esc(r[2])+'</span></td><td style="text-align:right"><button class="say" data-action="say" data-text="'+esc(r[1])+'">▶</button></td></tr>'}).join('')+'</table></div>';
+ }
+ h+='<div class="sh-sec"><h3>Dipakai di frasamu</h3>'+(ps.length?ps.map(function(p){return '<div class="lp"><div><span class="jpf">'+esc(p.jp)+'</span><small>'+esc(p.romaji)+' · '+esc(p.arti)+'</small></div><button class="say" data-action="say" data-text="'+esc(p.jp)+'">▶</button></div>'}).join(''):'<p>Belum ada. Kata ini akan terhubung otomatis saat muncul di frasa yang kamu simpan.</p>')+'</div>'+
+  '<button class="del" data-action="wdel" data-id="'+esc(w.id)+'">Hapus kata</button>';
+ $('wsheetIn').innerHTML=h;$('wsheet').hidden=false;
+}
+
+/* ---------- speech ---------- */
+var synth=window.speechSynthesis||null,jaVoice=null,idVoice=null,ttsCap=null;
+function pickVoices(){
+ if(!synth)return;var vs=[];try{vs=synth.getVoices()||[]}catch(e){}
+ var ja=vs.filter(function(v){return /^ja/i.test(v.lang)});
+ jaVoice=ja.filter(function(v){return /Kyoko|Otoya|Hattori|O-ren|Google/i.test(v.name)})[0]||ja[0]||null;
+ idVoice=vs.filter(function(v){return /^id/i.test(v.lang)})[0]||null;
+}
+if(synth){pickVoices();try{synth.onvoiceschanged=pickVoices}catch(e){}}
+var RATE_SLOW=0.6,RATE_N=0.92;
+function speak(text,lang,rate){
+ return new Promise(function(res,rej){
+  if(synth&&window.SpeechSynthesisUtterance){
+   var u=new SpeechSynthesisUtterance(text);u.lang=lang==='ja'?'ja-JP':'id-ID';
+   var v=lang==='ja'?jaVoice:idVoice;if(v)u.voice=v;u.rate=rate;
+   var done=false,w=null,fin=function(){if(!done){done=true;if(w)clearTimeout(w);res()}};
+   u.onend=fin;u.onerror=fin;w=setTimeout(fin,2500+text.length*420/rate);
+   synth.speak(u);return;
+  }
+  if(ttsCap){ttsCap.speak(text,{language:lang,rate:Math.min(1.5,Math.max(0.7,rate))}).then(function(){res()},function(){res()});return}
+  rej(new Error('noaudio'));
+ });
+}
+var playToken=0,playingId=null;
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function shadowMs(t){return 1200+t.length*260}
+function sel(id){return document.querySelector('[data-card="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]')}
+function markPlaying(id,label){
+ Array.prototype.forEach.call(document.querySelectorAll('.playing'),function(el){el.classList.remove('playing');var s=el.querySelector('.step');if(s)s.textContent=''});
+ if(!id)return;var el=sel(id);if(el){el.classList.add('playing');var s=el.querySelector('.step');if(s)s.textContent=label||''}
+}
+function stopAll(){
+ playToken++;playingId=null;
+ try{if(synth&&(synth.speaking||synth.pending))synth.cancel()}catch(e){}
+ try{if(ttsCap)ttsCap.stop()}catch(e){}
+ markPlaying(null);
+}
+function bump(id){
+ var p=byId(id);if(!p||id==='result')return;
+ p.count=(p.count||0)+1;p.last=Date.now();save();markDay();
+ var el=sel(id);if(el){var b=el.querySelector('.cnt b');if(b)b.textContent=p.count}
+}
+function audioFail(e){if(e&&e.message==='noaudio')toast('Suara Jepang tidak tersedia di sini. Coba buka di Safari.')}
+function playPhrase(id){
+ var p=byId(id);if(!p)return;
+ stopAll();var tok=++playToken;playingId=id;markPlaying(id,'🐢 Pelan…');
+ speak(p.jp,'ja',RATE_SLOW).then(function(){if(tok!==playToken)throw 0;markPlaying(id,'▶ Normal…');return sleep(500)})
+ .then(function(){if(tok!==playToken)throw 0;return speak(p.jp,'ja',RATE_N)})
+ .then(function(){if(tok!==playToken)throw 0;markPlaying(id,'🗣️ Giliranmu, tirukan!');return sleep(shadowMs(p.jp))})
+ .then(function(){if(tok!==playToken)throw 0;markPlaying(id,'▶ Sekali lagi…');return speak(p.jp,'ja',RATE_N)})
+ .then(function(){if(tok!==playToken)throw 0;markPlaying(id,'🗣️ Giliranmu!');return sleep(shadowMs(p.jp))})
+ .then(function(){if(tok!==playToken)return;bump(id);playingId=null;markPlaying(null)})
+ .catch(function(e){if(e!==0)audioFail(e);if(tok===playToken){playingId=null;markPlaying(null)}});
+}
+
+/* ---------- train mode ---------- */
+var TRAIN_MAX=15;
+function openPlayer(){
+ var pl=$('player');pl.hidden=false;
+ pl.innerHTML='<div class="pl-in"><div class="pl-top"><span id="plSt"></span><span id="plPos"></span></div>'+
+  '<div class="pl-id" id="plId"></div><div class="pl-jp jpf" id="plJp"></div><div class="pl-kana jpf" id="plKana"></div><div class="pl-ro" id="plRo"></div>'+
+  '<div class="pl-step" id="plStep"></div><button class="btn ghost" data-action="stop">■ Berhenti</button></div>';
+}
+function closePlayer(){var pl=$('player');pl.hidden=true;pl.innerHTML=''}
+function setP(id,t){var e=$(id);if(e)e.textContent=t}
+function reveal(show){['plJp','plKana','plRo'].forEach(function(i){var e=$(i);if(e)e.classList.toggle('hide',!show)})}
+async function trainMode(){
+ var list=view().slice(0,TRAIN_MAX);if(!list.length)return;
+ stopAll();var tok=++playToken;openPlayer();
+ var i=0,round=1,label={due:'Perlu diulang',new:'Terbaru',fav:'Favorit',done:'Hafal'}[data.settings.filter];
+ try{
+  while(tok===playToken){
+   var p=list[i];
+   setP('plSt','🥷 影 kage · '+label+(data.settings.loop?' · putaran '+round:''));setP('plPos',(i+1)+' / '+list.length);
+   setP('plId',p.arti);setP('plJp',p.jp);setP('plKana',p.kana&&p.kana!==p.jp?p.kana:'');setP('plRo',p.romaji);
+   if(data.settings.guess){
+    reveal(false);setP('plStep','🤔 Apa bahasa Jepangnya?');
+    await speak(p.arti,'id',1);if(tok!==playToken)break;
+    await sleep(3000);if(tok!==playToken)break;
+   }
+   reveal(true);setP('plStep','▶ Dengar…');
+   await speak(p.jp,'ja',RATE_N);if(tok!==playToken)break;
+   setP('plStep','🗣️ Giliranmu, tirukan!');await sleep(shadowMs(p.jp));if(tok!==playToken)break;
+   setP('plStep','▶ Sekali lagi…');await speak(p.jp,'ja',RATE_N);if(tok!==playToken)break;
+   setP('plStep','🗣️ Giliranmu!');await sleep(shadowMs(p.jp));if(tok!==playToken)break;
+   bump(p.id);i++;
+   if(i>=list.length){if(data.settings.loop){i=0;round++}else break}
+  }
+ }catch(e){audioFail(e);if(tok===playToken)closePlayer();return}
+ if(tok===playToken){setP('plStep','🎉 Latihan selesai! お疲れさま (otsukaresama)');setP('plPos','');renderList()}
+}
+
+/* ---------- translate ---------- */
+var sampleFn=null,currentResult=null,lastQuery='';
+function buildPrompt(text){
+ return 'Kamu guru bahasa Jepang untuk orang Indonesia yang tinggal di Jepang. Dia sedang melakukan sebuah kegiatan sehari-hari dan ingin tahu cara mengucapkannya dalam bahasa Jepang yang NATURAL, seperti yang benar-benar diucapkan atau dipikirkan orang Jepang. Kalau ada ungkapan tetap yang lazim (misalnya 行ってきます untuk "aku berangkat" atau ただいま untuk "aku pulang"), pakai itu.\n\n'+
+ 'Kalimat (bahasa Indonesia): """'+text+'"""\n\n'+
+ 'Balas HANYA dengan JSON valid, tanpa markdown, dengan bentuk persis:\n'+
+ '{"jp":"kalimat utama dalam bentuk sopan untuk percakapan (〜ます/〜です/〜ましょう) atau ungkapan tetap","kana":"bacaan hiragana lengkap","romaji":"romaji Hepburn, spasi antar kata; partikel を ditulis o, partikel は ditulis wa","arti":"arti singkat dalam bahasa Indonesia","kata":[{"jp":"kata dalam bentuk kamus (kata kerja: bentuk ~る/~う)","kana":"bacaan hiragana","romaji":"...","arti":"arti Indonesia","cat":"salah satu: kerja, benda, tempat, waktu, sifat, partikel, lain","stem":"bagian kata yang muncul persis di kalimat jp (mis. 履 untuk 履く, 靴 untuk 靴)","forms":{"masu":{"jp":"...","romaji":"..."},"te":{"jp":"...","romaji":"..."},"ta":{"jp":"...","romaji":"..."}}}],"catatan":"satu kalimat tips pemakaian dalam bahasa Indonesia santai, atau string kosong"}\n'+
+ '"jp" SELALU bentuk sopan untuk kaiwa, juga untuk ajakan ke anak (mis. 遊びましょう, bukan 遊ぼう). "kata" berisi 2-5 kata penting saja; isi "forms" HANYA untuk kata kerja, selain itu null. cat "tempat" untuk tempat dan arah, "partikel" untuk partikel dan ungkapan tetap. Subjek "aku" biasanya dihilangkan dalam bahasa Jepang.';
+}
+function parseJson(t){
+ if(t&&typeof t==='object')return t;
+ t=String(t||'');var a=t.indexOf('{'),b=t.lastIndexOf('}');
+ if(a<0||b<a)throw {code:'bad_json'};
+ return JSON.parse(t.slice(a,b+1));
+}
+async function callApi(prompt,key,model){
+ var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{
+  'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+  body:JSON.stringify({model:model,max_tokens:900,messages:[{role:'user',content:prompt}]})});
+ var j=null;try{j=await r.json()}catch(e){}
+ if(!r.ok){var m=j&&j.error&&j.error.message||('HTTP '+r.status);throw {code:r.status===401?'bad_key':r.status===429?'rate_limited':'api',message:m}}
+ var txt=(j&&j.content||[]).filter(function(c){return c.type==='text'}).map(function(c){return c.text}).join('');
+ return txt;
+}
+async function translate(q){
+ var prompt=buildPrompt(q);
+ if(sampleFn)return parseJson(await sampleFn.json(prompt));
+ if(api.key)return parseJson(await callApi(prompt,api.key,api.model));
+ throw {code:'no_engine'};
+}
+function str(x){return typeof x==='string'?x.trim():''}
+function normalize(r){
+ r=r||{};
+ var kata=Array.isArray(r.kata)?r.kata.slice(0,6).map(function(k){
+  k=k||{};var f=k.forms,forms=null;
+  if(f&&f.masu&&str(f.masu.jp))forms={masu:{jp:str(f.masu.jp),romaji:str(f.masu.romaji)},te:{jp:str(f.te&&f.te.jp),romaji:str(f.te&&f.te.romaji)},ta:{jp:str(f.ta&&f.ta.jp),romaji:str(f.ta&&f.ta.romaji)}};
+  return {jp:str(k.jp),kana:str(k.kana),romaji:str(k.romaji),arti:str(k.arti),cat:CAT[str(k.cat)]?str(k.cat):'lain',stem:str(k.stem)||str(k.jp),forms:forms};
+ }).filter(function(k){return k.jp}):[];
+ return {id:'result',jp:str(r.jp),kana:str(r.kana),romaji:str(r.romaji),arti:str(r.arti),kata:kata,catatan:str(r.catatan)};
+}
+function renderResult(){
+ var p=currentResult,el=$('result');
+ if(!p){el.innerHTML='';return}
+ var dup=data.phrases.some(function(x){return x.jp===p.jp});
+ el.innerHTML='<div class="res" data-card="result">'+
+  '<div class="jp jpf">'+esc(p.jp)+'</div>'+(p.kana&&p.kana!==p.jp?'<div class="kana jpf">'+esc(p.kana)+'</div>':'')+
+  '<div class="ro">'+esc(p.romaji)+'</div><div class="idn">'+esc(p.arti)+'</div><div class="step"></div>'+detailHtml(p)+
+  '<div class="res-act"><button class="btn ghost" data-action="play" data-id="result">▶ Dengar 3x</button>'+
+  (dup?'<span class="hint" style="align-self:center">Sudah ada di daftarmu</span>':'<button class="btn" data-action="save">Simpan</button>')+
+  '<button class="btn ghost" data-action="dismiss">Tutup</button></div></div>';
+}
+async function doTranslate(){
+ var q=$('q').value.trim();if(!q)return;
+ $('q').blur();lastQuery=q;
+ $('result').innerHTML='<p class="loading">🥷 Sedang menerjemahkan…</p>';
+ try{
+  var r=await translate(q);if(q!==lastQuery)return;
+  var p=normalize(r);if(!p.jp)throw {code:'bad_json'};
+  currentResult=p;renderResult();
+ }catch(e){
+  if(q!==lastQuery)return;
+  var c=e&&e.code,msg;
+  if(c==='no_engine')msg='Belum ada API key. <button class="link" data-action="open-settings">Isi di Pengaturan ⚙️</button>';
+  else if(c==='bad_key')msg='API key ditolak. <button class="link" data-action="open-settings">Cek di Pengaturan ⚙️</button>';
+  else if(c==='not_granted')msg='Izin ke Claude belum diberikan, jadi terjemahan tidak bisa jalan.';
+  else if(c==='rate_limited')msg='Terlalu sering. Tunggu sebentar lalu coba lagi.';
+  else msg='Gagal menerjemahkan'+(e&&e.message?' ('+esc(e.message)+')':'')+'. Coba lagi ya.';
+  $('result').innerHTML='<p class="err">'+msg+'</p>';
+ }
+}
+function saveResult(){
+ if(!currentResult)return;
+ var p={};for(var k in currentResult)p[k]=currentResult[k];
+ p.id='u'+Date.now().toString(36);p.created=Date.now();p.count=0;p.last=0;p.fav=false;p.src=lastQuery;
+ data.phrases.push(p);var nw=0;(p.kata||[]).forEach(function(k){if(upsertWord(fromKata(k)))nw++});save();markDay();
+ currentResult=null;$('q').value='';renderResult();
+ if(data.settings.filter==='fav'){data.settings.filter='new';save();renderTools()}
+ searchQ='';$('search').value='';renderList();renderWords();toast('Tersimpan ✓'+(nw?' · +'+nw+' kata baru di Kotoba':''));
+}
+
+/* ---------- settings / backup ---------- */
+function openSettings(){
+ $('apiKey').value=api.key||'';$('apiKey').type='password';$('model').value=api.model;
+ $('keyStatus').textContent=api.key?'Key tersimpan di perangkat ini.':'';
+ $('apiInfo').textContent=sampleFn?'Saat dibuka di Claude, terjemahan memakai Claude langsung, jadi key tidak dibutuhkan di sini. Key dipakai saat app dibuka dari home screen.':'Dipakai saat app dibuka di luar Claude, misalnya dari home screen. Key hanya disimpan di perangkat ini dan dikirim langsung ke Anthropic.';
+ $('sheet').hidden=false;
+}
+
+/* ---------- events ---------- */
+$('askForm').addEventListener('submit',function(e){e.preventDefault();doTranslate()});
+$('search').addEventListener('input',function(){searchQ=this.value;renderList()});
+$('sheet').addEventListener('click',function(e){if(e.target===this)this.hidden=true});
+$('wsheet').addEventListener('click',function(e){if(e.target===this)this.hidden=true});
+$('wsearch').addEventListener('input',function(){wSearch=this.value;renderWords()});
+document.addEventListener('click',function(e){
+ var b=e.target.closest('[data-action]');if(!b)return;
+ var a=b.getAttribute('data-action'),id=b.getAttribute('data-id');
+ if(a==='play'){if(playingId===id){stopAll();return}playPhrase(id)}
+ else if(a==='fav'){var p=byId(id);if(p){p.fav=!p.fav;save();b.classList.toggle('on',p.fav);b.textContent=p.fav?'★':'☆';if(data.settings.filter==='fav'&&!p.fav)renderList()}}
+ else if(a==='archive'){var pa=byId(id);if(pa){stopAll();pa.archived=!pa.archived;save();renderList();toast(pa.archived?'Masuk Hafal ✅ Hebat!':'Dikembalikan ke daftar')}}
+ else if(a==='streak'){var s=streak();toast(s.doneToday?'🔥 '+s.n+' hari berturut-turut · rekor '+Math.max(data.best||0,s.n)+' hari':s.n?'Belum belajar hari ini. Ulang 1 frasa supaya streak '+s.n+' hari tetap jalan 🔥':'Ulang 1 frasa atau simpan frasa baru untuk mulai streak 🔥')}
+ else if(a==='kj-toggle'){var ks=kanjiState();kjOpen=!(kjOpen===null?!ks.doneToday:kjOpen);renderKanji()}
+ else if(a==='kj-known'){var kk=kanjiState();if(kk.cur&&kk.known.indexOf(kk.cur)<0)kk.known.push(kk.cur);kk.doneToday=true;save();markDay();kjOpen=true;renderKanji();toast('Mantap! '+kk.known.length+' kanji dikenal 🥷')}
+ else if(a==='kj-more')nextKanji();
+ else if(a==='view'){stopAll();setView(id)}
+ else if(a==='cat'){data.settings.cat=id;save();renderWords()}
+ else if(a==='word')openWord(id);
+ else if(a==='close-word')$('wsheet').hidden=true;
+ else if(a==='pack')addPack(id);
+ else if(a==='say'){stopAll();speak(b.getAttribute('data-text'),'ja',RATE_N).catch(audioFail)}
+ else if(a==='wplay'){var ww=wordById(id);if(ww){var wj=polite(ww).jp;stopAll();var tk=++playToken;speak(wj,'ja',RATE_SLOW).then(function(){if(tk!==playToken)throw 0;return sleep(500)}).then(function(){if(tk!==playToken)throw 0;return speak(wj,'ja',RATE_N)}).then(function(){if(tk===playToken)markDay()}).catch(function(e){if(e!==0)audioFail(e)})}}
+ else if(a==='wdel'){if(b.getAttribute('data-armed')){data.words=data.words.filter(function(x){return x.id!==id});save();$('wsheet').hidden=true;renderWords();toast('Kata dihapus')}else{b.setAttribute('data-armed','1');b.textContent='Yakin? Ketuk lagi untuk hapus'}}
+ else if(a==='more'){var m=b.closest('.ph').querySelector('.ph-more');m.hidden=!m.hidden}
+ else if(a==='del'){if(b.getAttribute('data-armed')){stopAll();data.phrases=data.phrases.filter(function(x){return x.id!==id});save();renderList();toast('Dihapus')}else{b.setAttribute('data-armed','1');b.textContent='Yakin? Ketuk lagi untuk hapus';setTimeout(function(){if(b.isConnected){b.removeAttribute('data-armed');b.textContent='Hapus'}},3000)}}
+ else if(a==='filter'){data.settings.filter=id;save();stopAll();renderTools();renderList()}
+ else if(a==='train')trainMode();
+ else if(a==='stop'){stopAll();closePlayer();renderList()}
+ else if(a==='tg-guess'){data.settings.guess=!data.settings.guess;save();renderTools()}
+ else if(a==='tg-loop'){data.settings.loop=!data.settings.loop;save();renderTools()}
+ else if(a==='save')saveResult();
+ else if(a==='dismiss'){stopAll();currentResult=null;renderResult()}
+ else if(a==='open-settings')openSettings();
+ else if(a==='close-settings')$('sheet').hidden=true;
+ else if(a==='toggle-key'){var k=$('apiKey');k.type=k.type==='password'?'text':'password'}
+ else if(a==='save-key'){api.key=$('apiKey').value.trim();api.model=$('model').value;saveApi();$('keyStatus').textContent=api.key?'Tersimpan ✓':'Key dikosongkan.'}
+ else if(a==='clear-key'){api.key='';$('apiKey').value='';saveApi();$('keyStatus').textContent='Key dihapus dari perangkat ini.'}
+ else if(a==='test-key'){
+  var key=$('apiKey').value.trim();if(!key){$('keyStatus').textContent='Isi key dulu.';return}
+  $('keyStatus').textContent='Mengetes…';
+  callApi('Balas dengan satu kata: OK',key,$('model').value).then(function(){$('keyStatus').textContent='Key berfungsi ✓ (jangan lupa Simpan)'},function(e){$('keyStatus').textContent='Gagal: '+(e&&e.message||'tidak bisa terhubung')});
+ }
+});
+
+/* ---------- Claude capabilities (only inside Claude) ---------- */
+var dictCap=null,listening=false;
+$('mic').addEventListener('click',function(){
+ if(!dictCap)return;
+ if(listening){dictCap.stop().catch(function(){});return}
+ dictCap.start().catch(function(err){if(err&&err.code==='not_granted')$('mic').hidden=true});
+});
+function initCaps(){
+ var c=window.claude;if(!c||typeof c.use!=='function')return false;
+ c.use('sample').then(function(s){sampleFn=s}).catch(function(){});
+ c.use('tts').then(function(t){ttsCap=t}).catch(function(){});
+ c.use('dictation').then(function(d){
+  if(!d)return;dictCap=d;$('mic').hidden=false;$('hint').textContent='Ketik, atau tekan 🎤 untuk bicara.';
+  d.onFinal(function(x){var t=x&&x.text||'';if(t){var q=$('q');q.value=(q.value?q.value+' ':'')+t.trim()}});
+  d.onState(function(x){listening=x&&x.state==='listening';$('mic').classList.toggle('rec',listening)});
+ }).catch(function(){});
+ return true;
+}
+if(!initCaps()){var tries=0,iv=setInterval(function(){if(initCaps()||++tries>20)clearInterval(iv)},250)}
+
+renderKanji();renderTools();renderList();renderStreak();
+/* PWA: offline support (GitHub Pages only) */
+if('serviceWorker' in navigator&&location.protocol==='https:'&&!/claude\.ai|claudeusercontent/.test(location.hostname)){
+ window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});
+}setView(data.settings.view==='kotoba'?'kotoba':'frasa');
+})();
+</script>
+</body>
+</html>
