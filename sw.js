@@ -1,5 +1,5 @@
 // Shinobi Nihongo service worker: app shell offline, fonts cached at runtime.
-const CACHE = 'shinobi-v5';
+const CACHE = 'shinobi-v6';
 const SHELL = ['./', 'index.html', 'manifest.json', 'icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {

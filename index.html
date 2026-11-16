@@ -674,19 +674,23 @@ function renderKaiwa(){
  var done=data.kaiwaDone.indexOf(d.id)>=0;
  $('kwBody').innerHTML='<div class="kw-head"><button class="btn ghost sm" data-action="kw-back">← Kembali</button><h3>'+esc(d.title)+'</h3></div>'+
   '<div class="kw-actions"><button class="btn sm" data-action="kw-play" data-id="'+d.id+'">▶ Putar dialog</button><button class="btn sm" data-action="kw-role" data-id="'+d.id+'">🎭 Latihan peran</button>'+
-  '<button class="btn ghost sm" data-action="kw-done" data-id="'+d.id+'">'+(done?'✓ Lancar':'Tandai lancar')+'</button></div>'+
+  '<button class="btn ghost sm" data-action="kw-stop">■ Stop</button><button class="btn ghost sm" data-action="kw-done" data-id="'+d.id+'">'+(done?'✓ Lancar':'Tandai lancar')+'</button></div>'+
+  '<div class="chips" style="margin:0 0 4px">'+[['1','1x'],['3','3x'],['0','Terus']].map(function(r){return '<button class="chip'+(String(data.settings.kwRep||'1')===r[0]?' on':'')+'" data-action="kw-rep" data-id="'+r[0]+'">🔁 '+r[1]+'</button>'}).join('')+'</div>'+
   '<div class="kw-step" id="kwStep"></div><div class="chat">'+
   d.lines.map(function(l,i){var me=l[0]==='k';
    return '<div class="bub'+(me?' me':'')+'" data-bub="'+i+'"><span class="who">'+(me?'Kamu':esc(d.other[0])+' '+esc(d.other[1])+' · '+esc(d.other[2]))+'</span>'+
     '<span class="jp jpf">'+esc(l[1])+'</span><span class="ro">'+esc(l[2])+'</span><span class="idn">'+esc(l[3])+'</span>'+
-    '<div class="bub-row"><button data-action="kw-say" data-id="'+d.id+':'+i+'">▶</button>'+(me?'<button data-action="kw-save" data-id="'+d.id+':'+i+'">＋ Frasa</button>':'')+'</div></div>'}).join('')+'</div>';
+    '<div class="bub-row"><button data-action="kw-say" data-id="'+d.id+':'+i+'">▶</button><button data-action="kw-line" data-id="'+d.id+':'+i+'">🔁 Ulang</button>'+(me?'<button data-action="kw-save" data-id="'+d.id+':'+i+'">＋ Frasa</button>':'')+'</div></div>'}).join('')+'</div>';
 }
 function kwMark(i,cls,on){var b=document.querySelector('[data-bub="'+i+'"]');if(b)b.classList.toggle(cls,on)}
 function kwClear(){Array.prototype.forEach.call(document.querySelectorAll('.bub'),function(b){b.classList.remove('playing','hidejp')})}
 async function kwRun(id,role){
  var d=kwById(id);if(!d)return;stopAll();var tok=++playToken;kwClear();
- var step=function(t){var e=$('kwStep');if(e)e.textContent=t};
+ var step0=function(t){var e=$('kwStep');if(e)e.textContent=t};
+ var rep=+(data.settings.kwRep||1),round=1,step;
  try{
+  while(true){
+  step=function(t){step0((rep!==1?'Putaran '+round+(rep?'/'+rep:'')+' · ':'')+t)};
   for(var i=0;i<d.lines.length;i++){
    if(tok!==playToken)return;var l=d.lines[i],me=l[0]==='k',b=document.querySelector('[data-bub="'+i+'"]');
    kwClear();kwMark(i,'playing',true);if(b&&b.scrollIntoView)try{b.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}
@@ -702,8 +706,26 @@ async function kwRun(id,role){
     await sleep(role?500:700);
    }
   }
-  if(tok!==playToken)return;kwClear();step(role?'🎉 Latihan selesai! Kalau sudah lancar, tandai ✓':'Selesai. Coba 🎭 Latihan peran.');markDay();
+  if(tok!==playToken)return;
+  if(rep===0||round<rep){round++;kwClear();step0('🔁 Mulai lagi…');await sleep(1500);if(tok!==playToken)return;continue}
+  break;
+  }
+  kwClear();step(role?'🎉 Latihan selesai! Kalau sudah lancar, tandai ✓':'Selesai. Coba 🎭 Latihan peran.');markDay();
  }catch(e){audioFail(e);step('')}
+}
+
+async function kwLine(id){
+ var pr=id.split(':'),d=kwById(pr[0]),i=+pr[1],l=d&&d.lines[i];if(!l)return;
+ stopAll();var tok=++playToken,alt=l[0]!=='k',st=function(t){var e=$('kwStep');if(e)e.textContent=t};
+ kwClear();kwMark(i,'playing',true);
+ try{
+  st('🐢 Pelan…');await speak(l[1],'ja',RATE_SLOW,alt);if(tok!==playToken)return;await sleep(500);
+  st('▶ Normal…');await speak(l[1],'ja',RATE_N,alt);if(tok!==playToken)return;
+  st('🗣️ Giliranmu, tirukan!');await sleep(shadowMs(l[1]));if(tok!==playToken)return;
+  st('▶ Sekali lagi…');await speak(l[1],'ja',RATE_N,alt);if(tok!==playToken)return;
+  st('🗣️ Giliranmu!');await sleep(shadowMs(l[1]));if(tok!==playToken)return;
+  kwClear();st('');markDay();
+ }catch(e){audioFail(e);st('')}
 }
 
 /* ---------- kotoba ---------- */
@@ -1024,6 +1046,9 @@ document.addEventListener('click',function(e){
  else if(a==='kw-open'){stopAll();kwOpen=id;renderKaiwa();window.scrollTo(0,0)}
  else if(a==='kw-back'){stopAll();kwOpen=null;renderKaiwa()}
  else if(a==='kw-play')kwRun(id,false);
+ else if(a==='kw-line')kwLine(id);
+ else if(a==='kw-stop'){stopAll();kwClear();var ks=$('kwStep');if(ks)ks.textContent=''}
+ else if(a==='kw-rep'){data.settings.kwRep=id;save();var keep=$('kwStep')?$('kwStep').textContent:'';Array.prototype.forEach.call(document.querySelectorAll('[data-action=kw-rep]'),function(x){x.classList.toggle('on',x.getAttribute('data-id')===id)})}
  else if(a==='kw-role')kwRun(id,true);
  else if(a==='kw-done'){data.kaiwaDone=data.kaiwaDone||[];var di=data.kaiwaDone.indexOf(id);if(di>=0)data.kaiwaDone.splice(di,1);else{data.kaiwaDone.push(id);markDay()}save();renderKaiwa()}
  else if(a==='kw-say'){var pr=id.split(':'),dl=kwById(pr[0]),ln=dl&&dl.lines[+pr[1]];if(ln){stopAll();kwClear();kwMark(+pr[1],'playing',true);speak(ln[1],'ja',RATE_N,ln[0]!=='k').then(function(){kwClear()}).catch(audioFail)}}
