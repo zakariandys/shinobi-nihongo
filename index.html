@@ -163,6 +163,26 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
 .kj-rd span{background:var(--soft);border-radius:999px;padding:3px 9px}
 .kj-rd i{color:var(--accent);font-style:normal;font-weight:700}
 .kj-sub{font-size:12px;font-weight:800;color:var(--mute);margin:10px 0 2px}
+.kw-card{width:100%;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;text-align:left}
+.kw-ic{font-size:26px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--soft);border-radius:12px;flex:0 0 auto}
+.kw-t{font-weight:800;font-size:15px}
+.kw-s{font-size:12.5px;color:var(--mute);margin-top:2px}
+.kw-done{margin-left:auto;color:var(--green);font-weight:800;font-size:13px}
+.kw-head{display:flex;align-items:center;gap:10px;margin:4px 0 10px}
+.kw-head h3{margin:0;font-size:18px}
+.kw-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.kw-step{font-size:14px;font-weight:800;color:var(--accent);min-height:20px;margin:4px 2px 10px}
+.chat{display:flex;flex-direction:column;gap:10px}
+.bub{max-width:86%;align-self:flex-start;background:var(--card);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:9px 12px;text-align:left;display:flex;flex-direction:column;gap:1px}
+.bub.me{align-self:flex-end;background:var(--tint);border-color:#6B3E36;border-radius:16px 16px 4px 16px}
+.bub .who{font-size:11px;font-weight:800;color:var(--mute)}
+.bub .jp{font-size:18px;font-weight:700;line-height:1.4}
+.bub .ro{font-size:13.5px}
+.bub .idn{font-size:13px;color:var(--mute)}
+.bub.playing{box-shadow:0 0 0 2px var(--accent)}
+.bub.hidejp .jp,.bub.hidejp .ro{visibility:hidden}
+.bub-row{display:flex;gap:6px;margin-top:4px}
+.bub-row button{background:transparent;border:1.5px solid var(--line);color:var(--ink);border-radius:10px;padding:3px 9px;font-size:12.5px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);opacity:0;background:#F3EDE4;color:#1E2433;font-size:14px;padding:10px 16px;border-radius:12px;transition:.25s;z-index:60;max-width:90vw;text-align:center;pointer-events:none}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 </style>
@@ -176,7 +196,7 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
   <button class="gear" data-action="open-settings" aria-label="Pengaturan">⚙️</button>
  </header>
  <div class="track" aria-hidden="true"></div>
- <div class="tabs" id="tabs"><button data-action="view" data-id="frasa">💬 Frasa</button><button data-action="view" data-id="kotoba">📖 Kotoba</button></div>
+ <div class="tabs" id="tabs"><button data-action="view" data-id="frasa">💬 Frasa</button><button data-action="view" data-id="kotoba">📖 Kotoba</button><button data-action="view" data-id="kaiwa">🗣️ Kaiwa</button></div>
  <div id="viewFrasa">
 
  <section id="kanji"></section>
@@ -203,6 +223,10 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
   <div class="chips" id="chips"></div>
  </section>
  <section id="list"></section>
+ </div>
+ <div id="viewKaiwa" hidden>
+  <div class="cats" id="kwCats" style="margin-top:0"></div>
+  <section id="kwBody"></section>
  </div>
  <div id="viewKotoba" hidden>
   <input id="wsearch" class="search" type="search" placeholder="Cari kata (Indonesia, romaji, Jepang)">
@@ -411,6 +435,83 @@ var KANJI=[
  ['目','mata',[['め','me']],[['モク','moku']],[['目','め','me','mata'],['目的','もくてき','mokuteki','tujuan']]],
  ['間','antara; selang',[['あいだ','aida']],[['カン','kan']],[['時間','じかん','jikan','waktu'],['間','あいだ','aida','di antara']]]
 ];
+var KW_CATS=[{id:'resto',name:'Restoran',ic:'🍜',jp:'レストラン',ro:'resutoran'},{id:'kantor',name:'Kantor',ic:'🏢',jp:'会社',ro:'kaisha'},{id:'stasiun',name:'Stasiun',ic:'🚉',jp:'駅',ro:'eki'},{id:'umum',name:'Tempat umum',ic:'🏪',jp:'町',ro:'machi'}];
+/* lines: [who ('o' = lawan bicara, 'k' = kamu), jp, romaji, arti] */
+var KAIWA=[
+ {id:'r1',cat:'resto',title:'Masuk & dapat meja',other:['店員','ten\'in','Staf'],lines:[
+  ['o','いらっしゃいませ。何名様ですか。','irasshaimase. nanmei-sama desu ka.','Selamat datang. Berapa orang?'],
+  ['k','二人です。','futari desu.','Dua orang.'],
+  ['o','こちらへどうぞ。','kochira e douzo.','Silakan lewat sini.'],
+  ['k','ありがとうございます。','arigatou gozaimasu.','Terima kasih.'],
+  ['o','ご注文がお決まりになりましたら、お呼びください。','go-chuumon ga o-kimari ni narimashitara, o-yobi kudasai.','Kalau sudah siap memesan, silakan panggil kami.'],
+  ['k','はい、分かりました。','hai, wakarimashita.','Baik, mengerti.']]},
+ {id:'r2',cat:'resto',title:'Memesan makanan',other:['店員','ten\'in','Staf'],lines:[
+  ['k','すみません、注文をお願いします。','sumimasen, chuumon o onegaishimasu.','Permisi, saya mau pesan.'],
+  ['o','はい、どうぞ。','hai, douzo.','Ya, silakan.'],
+  ['k','これは豚肉が入っていますか。','kore wa butaniku ga haitte imasu ka.','Apakah ini ada daging babinya?'],
+  ['o','はい、入っています。','hai, haitte imasu.','Ya, ada.'],
+  ['k','じゃあ、こちらを一つと、お水を二つお願いします。','jaa, kochira o hitotsu to, o-mizu o futatsu onegaishimasu.','Kalau begitu, yang ini satu dan air dua.'],
+  ['o','かしこまりました。少々お待ちください。','kashikomarimashita. shoushou o-machi kudasai.','Baik. Mohon tunggu sebentar.']]},
+ {id:'r3',cat:'resto',title:'Membayar',other:['店員','ten\'in','Staf'],lines:[
+  ['k','すみません、お会計をお願いします。','sumimasen, o-kaikei o onegaishimasu.','Permisi, minta bon.'],
+  ['o','はい、二千四百円です。','hai, nisen yonhyaku en desu.','Baik, 2.400 yen.'],
+  ['k','カードで払えますか。','kaado de haraemasu ka.','Bisa bayar pakai kartu?'],
+  ['o','はい、大丈夫です。','hai, daijoubu desu.','Ya, bisa.'],
+  ['k','ごちそうさまでした。','gochisousama deshita.','Terima kasih atas makanannya.'],
+  ['o','ありがとうございました。','arigatou gozaimashita.','Terima kasih banyak.']]},
+ {id:'k1',cat:'kantor',title:'Sapaan pagi',other:['同僚','douryou','Rekan kerja'],lines:[
+  ['o','おはようございます。','ohayou gozaimasu.','Selamat pagi.'],
+  ['k','おはようございます。今日は寒いですね。','ohayou gozaimasu. kyou wa samui desu ne.','Selamat pagi. Hari ini dingin ya.'],
+  ['o','そうですね。週末は何をしましたか。','sou desu ne. shuumatsu wa nani o shimashita ka.','Iya ya. Akhir pekan ngapain?'],
+  ['k','家族と公園に行きました。','kazoku to kouen ni ikimashita.','Pergi ke taman bersama keluarga.'],
+  ['o','いいですね。','ii desu ne.','Asyik ya.']]},
+ {id:'k2',cat:'kantor',title:'Minta tolong cek dokumen',other:['田中さん','Tanaka-san','Tanaka'],lines:[
+  ['k','田中さん、今ちょっといいですか。','Tanaka-san, ima chotto ii desu ka.','Tanaka-san, ada waktu sebentar?'],
+  ['o','はい、どうしましたか。','hai, dou shimashita ka.','Ya, ada apa?'],
+  ['k','この資料を確認していただけますか。','kono shiryou o kakunin shite itadakemasu ka.','Bisa tolong cek dokumen ini?'],
+  ['o','いいですよ。いつまでですか。','ii desu yo. itsu made desu ka.','Boleh. Sampai kapan?'],
+  ['k','明日の午前中までにお願いします。','ashita no gozenchuu made ni onegaishimasu.','Tolong sebelum besok siang.'],
+  ['o','分かりました。','wakarimashita.','Baik, mengerti.']]},
+ {id:'k3',cat:'kantor',title:'Pulang duluan',other:['同僚','douryou','Rekan kerja'],lines:[
+  ['k','すみません、今日はお先に失礼します。','sumimasen, kyou wa osaki ni shitsurei shimasu.','Maaf, hari ini saya pulang duluan.'],
+  ['o','お疲れさまでした。','otsukaresama deshita.','Terima kasih atas kerja kerasnya.'],
+  ['k','お疲れさまでした。また明日。','otsukaresama deshita. mata ashita.','Terima kasih juga. Sampai besok.']]},
+ {id:'s1',cat:'stasiun',title:'Tanya peron & jadwal',other:['駅員','ekiin','Petugas stasiun'],lines:[
+  ['k','すみません、横浜行きの電車は何番線ですか。','sumimasen, Yokohama-iki no densha wa nanbansen desu ka.','Permisi, kereta ke Yokohama di peron berapa?'],
+  ['o','三番線です。','sanbansen desu.','Peron 3.'],
+  ['k','次の電車は何時ですか。','tsugi no densha wa nanji desu ka.','Kereta berikutnya jam berapa?'],
+  ['o','八時十分です。','hachiji juppun desu.','Jam 8.10.'],
+  ['k','ありがとうございます。','arigatou gozaimasu.','Terima kasih.']]},
+ {id:'s2',cat:'stasiun',title:'Isi saldo Suica',other:['駅員','ekiin','Petugas stasiun'],lines:[
+  ['k','すみません、Suicaのチャージはどこでできますか。','sumimasen, Suica no chaaji wa doko de dekimasu ka.','Permisi, isi saldo Suica di mana?'],
+  ['o','あちらの券売機でできますよ。','achira no kenbaiki de dekimasu yo.','Bisa di mesin tiket sebelah sana.'],
+  ['k','現金だけですか。','genkin dake desu ka.','Hanya bisa tunai?'],
+  ['o','はい、現金だけです。','hai, genkin dake desu.','Ya, hanya tunai.'],
+  ['k','分かりました。ありがとうございます。','wakarimashita. arigatou gozaimasu.','Baik. Terima kasih.']]},
+ {id:'s3',cat:'stasiun',title:'Kereta terlambat',other:['駅員','ekiin','Petugas stasiun'],lines:[
+  ['k','すみません、電車が遅れていますか。','sumimasen, densha ga okurete imasu ka.','Permisi, apakah keretanya terlambat?'],
+  ['o','はい、事故で二十分ぐらい遅れています。','hai, jiko de nijuppun gurai okurete imasu.','Ya, terlambat sekitar 20 menit karena kecelakaan.'],
+  ['k','遅延証明書をもらえますか。','chien shoumeisho o moraemasu ka.','Boleh minta surat keterangan keterlambatan?'],
+  ['o','はい、改札でどうぞ。','hai, kaisatsu de douzo.','Ya, silakan di gerbang tiket.']]},
+ {id:'u1',cat:'umum',title:'Di konbini',other:['店員','ten\'in','Kasir'],lines:[
+  ['o','いらっしゃいませ。袋はご利用ですか。','irasshaimase. fukuro wa go-riyou desu ka.','Selamat datang. Pakai kantong plastik?'],
+  ['k','いいえ、大丈夫です。','iie, daijoubu desu.','Tidak usah.'],
+  ['o','お弁当、温めますか。','o-bentou, atatamemasu ka.','Bentonya dihangatkan?'],
+  ['k','はい、お願いします。','hai, onegaishimasu.','Ya, tolong.'],
+  ['o','五百八十円です。','gohyaku hachijuu en desu.','580 yen.'],
+  ['k','PayPayでお願いします。','PayPay de onegaishimasu.','Pakai PayPay.']]},
+ {id:'u2',cat:'umum',title:'Tanya toilet',other:['店員','ten\'in','Staf'],lines:[
+  ['k','すみません、トイレはどこですか。','sumimasen, toire wa doko desu ka.','Permisi, toilet di mana?'],
+  ['o','まっすぐ行って、右にあります。','massugu itte, migi ni arimasu.','Lurus saja, ada di sebelah kanan.'],
+  ['k','ありがとうございます。','arigatou gozaimasu.','Terima kasih.']]},
+ {id:'u3',cat:'umum',title:'Ngobrol dengan tetangga',other:['隣の人','tonari no hito','Tetangga'],lines:[
+  ['o','こんにちは。いい天気ですね。','konnichiwa. ii tenki desu ne.','Halo. Cuacanya bagus ya.'],
+  ['k','こんにちは。そうですね。','konnichiwa. sou desu ne.','Halo. Iya ya.'],
+  ['o','お子さんは何歳ですか。','okosan wa nansai desu ka.','Anaknya umur berapa?'],
+  ['k','二歳です。','nisai desu.','Dua tahun.'],
+  ['o','かわいいですね。','kawaii desu ne.','Lucu ya.'],
+  ['k','ありがとうございます。','arigatou gozaimasu.','Terima kasih.']]}
+];
 var KEY='kotoba-densha-v2',KEY_API='kotoba-densha-api';
 var now0=Date.now();
 function seedData(){
@@ -555,6 +656,56 @@ function renderKanji(){
  el.innerHTML=h+'</div>';
 }
 
+/* ---------- kaiwa ---------- */
+var kwOpen=null;
+function kwById(id){return KAIWA.filter(function(d){return d.id===id})[0]||null}
+function renderKaiwa(){
+ data.kaiwaDone=data.kaiwaDone||[];var cat=data.settings.kwCat||'resto';
+ $('kwCats').innerHTML=KW_CATS.map(function(c){var n=KAIWA.filter(function(d){return d.cat===c.id}).length;return '<button class="chip'+(c.id===cat?' on':'')+'" data-action="kw-cat" data-id="'+c.id+'">'+c.ic+' '+c.name+' '+n+'</button>'}).join('');
+ var d=kwOpen&&kwById(kwOpen);
+ if(!d){
+  var c=KW_CATS.filter(function(x){return x.id===cat})[0];
+  $('kwBody').innerHTML='<div class="cat-h">'+c.name+' <span class="jpf">'+c.jp+'</span><small>'+c.ro+'</small></div>'+
+   KAIWA.filter(function(x){return x.cat===cat}).map(function(x){var done=data.kaiwaDone.indexOf(x.id)>=0;
+    return '<button class="kw-card" data-action="kw-open" data-id="'+x.id+'"><span class="kw-ic">'+c.ic+'</span><span><div class="kw-t">'+esc(x.title)+'</div><div class="kw-s">Kamu &amp; <span class="jpf">'+esc(x.other[0])+'</span> '+esc(x.other[1])+' · '+x.lines.length+' kalimat</div></span>'+(done?'<span class="kw-done">✓ Lancar</span>':'')+'</button>'}).join('')+
+   '<p class="hint" style="margin-top:6px">Ketuk dialog, lalu putar atau latihan peran. Kamu selalu jadi pihak di sebelah kanan.</p>';
+  return;
+ }
+ var done=data.kaiwaDone.indexOf(d.id)>=0;
+ $('kwBody').innerHTML='<div class="kw-head"><button class="btn ghost sm" data-action="kw-back">← Kembali</button><h3>'+esc(d.title)+'</h3></div>'+
+  '<div class="kw-actions"><button class="btn sm" data-action="kw-play" data-id="'+d.id+'">▶ Putar dialog</button><button class="btn sm" data-action="kw-role" data-id="'+d.id+'">🎭 Latihan peran</button>'+
+  '<button class="btn ghost sm" data-action="kw-done" data-id="'+d.id+'">'+(done?'✓ Lancar':'Tandai lancar')+'</button></div>'+
+  '<div class="kw-step" id="kwStep"></div><div class="chat">'+
+  d.lines.map(function(l,i){var me=l[0]==='k';
+   return '<div class="bub'+(me?' me':'')+'" data-bub="'+i+'"><span class="who">'+(me?'Kamu':esc(d.other[0])+' '+esc(d.other[1])+' · '+esc(d.other[2]))+'</span>'+
+    '<span class="jp jpf">'+esc(l[1])+'</span><span class="ro">'+esc(l[2])+'</span><span class="idn">'+esc(l[3])+'</span>'+
+    '<div class="bub-row"><button data-action="kw-say" data-id="'+d.id+':'+i+'">▶</button>'+(me?'<button data-action="kw-save" data-id="'+d.id+':'+i+'">＋ Frasa</button>':'')+'</div></div>'}).join('')+'</div>';
+}
+function kwMark(i,cls,on){var b=document.querySelector('[data-bub="'+i+'"]');if(b)b.classList.toggle(cls,on)}
+function kwClear(){Array.prototype.forEach.call(document.querySelectorAll('.bub'),function(b){b.classList.remove('playing','hidejp')})}
+async function kwRun(id,role){
+ var d=kwById(id);if(!d)return;stopAll();var tok=++playToken;kwClear();
+ var step=function(t){var e=$('kwStep');if(e)e.textContent=t};
+ try{
+  for(var i=0;i<d.lines.length;i++){
+   if(tok!==playToken)return;var l=d.lines[i],me=l[0]==='k',b=document.querySelector('[data-bub="'+i+'"]');
+   kwClear();kwMark(i,'playing',true);if(b&&b.scrollIntoView)try{b.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}
+   if(role&&me){
+    kwMark(i,'hidejp',true);step('🗣️ Giliranmu: ucapkan dalam bahasa Jepang');
+    await sleep(Math.max(4000,shadowMs(l[1])+1500));if(tok!==playToken)return;
+    kwMark(i,'hidejp',false);step('▶ Jawaban yang benar…');
+    await speak(l[1],'ja',RATE_N);if(tok!==playToken)return;
+    step('🗣️ Ulangi sekali lagi');await sleep(shadowMs(l[1]));
+   }else{
+    step(me?'▶ Kamu':'▶ '+d.other[2]);
+    await speak(l[1],'ja',RATE_N,!me);if(tok!==playToken)return;
+    await sleep(role?500:700);
+   }
+  }
+  if(tok!==playToken)return;kwClear();step(role?'🎉 Latihan selesai! Kalau sudah lancar, tandai ✓':'Selesai. Coba 🎭 Latihan peran.');markDay();
+ }catch(e){audioFail(e);step('')}
+}
+
 /* ---------- kotoba ---------- */
 var wSearch='';
 function wordById(id){for(var i=0;i<data.words.length;i++)if(data.words[i].id===id)return data.words[i];return null}
@@ -576,8 +727,8 @@ function phrasesFor(w){var s=w.stem||w.jp;return data.phrases.filter(function(p)
 function setView(v){
  data.settings.view=v;save();
  Array.prototype.forEach.call($('tabs').children,function(b){b.classList.toggle('on',b.getAttribute('data-id')===v)});
- $('viewFrasa').hidden=v!=='frasa';$('viewKotoba').hidden=v!=='kotoba';
- if(v==='kotoba')renderWords();
+ $('viewFrasa').hidden=v!=='frasa';$('viewKotoba').hidden=v!=='kotoba';$('viewKaiwa').hidden=v!=='kaiwa';
+ if(v==='kotoba')renderWords();if(v==='kaiwa')renderKaiwa();
 }
 function renderWords(){
  var q=wSearch.trim().toLowerCase(),c=data.settings.cat;
@@ -629,20 +780,23 @@ function pickVoices(){
  if(!synth)return;var vs=[];try{vs=synth.getVoices()||[]}catch(e){}
  var ja=vs.filter(function(v){return /^ja/i.test(v.lang)});
  jaVoice=ja.filter(function(v){return /Kyoko|Otoya|Hattori|O-ren|Google/i.test(v.name)})[0]||ja[0]||null;
+ jaVoice2=ja.filter(function(v){return v!==jaVoice&&/Otoya|Hattori|Kyoko|O-ren/i.test(v.name)})[0]||ja.filter(function(v){return v!==jaVoice})[0]||null;
  idVoice=vs.filter(function(v){return /^id/i.test(v.lang)})[0]||null;
 }
 if(synth){pickVoices();try{synth.onvoiceschanged=pickVoices}catch(e){}}
 var RATE_SLOW=0.6,RATE_N=0.92;
-function speak(text,lang,rate){
+var jaVoice2=null;
+function speak(text,lang,rate,alt){
  return new Promise(function(res,rej){
   if(synth&&window.SpeechSynthesisUtterance){
    var u=new SpeechSynthesisUtterance(text);u.lang=lang==='ja'?'ja-JP':'id-ID';
    var v=lang==='ja'?jaVoice:idVoice;if(v)u.voice=v;u.rate=rate;
+   if(alt&&lang==='ja'){if(jaVoice2)u.voice=jaVoice2;else u.pitch=1.35}
    var done=false,w=null,fin=function(){if(!done){done=true;if(w)clearTimeout(w);res()}};
    u.onend=fin;u.onerror=fin;w=setTimeout(fin,2500+text.length*420/rate);
    synth.speak(u);return;
   }
-  if(ttsCap){ttsCap.speak(text,{language:lang,rate:Math.min(1.5,Math.max(0.7,rate))}).then(function(){res()},function(){res()});return}
+  if(ttsCap){ttsCap.speak(text,{language:lang,rate:Math.min(1.5,Math.max(0.7,rate)),voice:alt?'airy':'buttery'}).then(function(){res()},function(){res()});return}
   rej(new Error('noaudio'));
  });
 }
@@ -866,6 +1020,14 @@ document.addEventListener('click',function(e){
  else if(a==='kj-toggle'){var ks=kanjiState();kjOpen=!(kjOpen===null?!ks.doneToday:kjOpen);renderKanji()}
  else if(a==='kj-known'){var kk=kanjiState();if(kk.cur&&kk.known.indexOf(kk.cur)<0)kk.known.push(kk.cur);kk.doneToday=true;save();markDay();kjOpen=true;renderKanji();toast('Mantap! '+kk.known.length+' kanji dikenal 🥷')}
  else if(a==='kj-more')nextKanji();
+ else if(a==='kw-cat'){stopAll();data.settings.kwCat=id;save();kwOpen=null;renderKaiwa()}
+ else if(a==='kw-open'){stopAll();kwOpen=id;renderKaiwa();window.scrollTo(0,0)}
+ else if(a==='kw-back'){stopAll();kwOpen=null;renderKaiwa()}
+ else if(a==='kw-play')kwRun(id,false);
+ else if(a==='kw-role')kwRun(id,true);
+ else if(a==='kw-done'){data.kaiwaDone=data.kaiwaDone||[];var di=data.kaiwaDone.indexOf(id);if(di>=0)data.kaiwaDone.splice(di,1);else{data.kaiwaDone.push(id);markDay()}save();renderKaiwa()}
+ else if(a==='kw-say'){var pr=id.split(':'),dl=kwById(pr[0]),ln=dl&&dl.lines[+pr[1]];if(ln){stopAll();kwClear();kwMark(+pr[1],'playing',true);speak(ln[1],'ja',RATE_N,ln[0]!=='k').then(function(){kwClear()}).catch(audioFail)}}
+ else if(a==='kw-save'){var ps=id.split(':'),dd=kwById(ps[0]),li=dd&&dd.lines[+ps[1]];if(li){if(data.phrases.some(function(x){return x.jp===li[1]})){toast('Sudah ada di Frasa')}else{data.phrases.push({id:'k'+Date.now().toString(36),jp:li[1],kana:'',romaji:li[2],arti:li[3],catatan:'Dari kaiwa: '+dd.title,created:Date.now(),count:0,last:0,fav:false});save();renderList();toast('Ditambahkan ke Frasa ✓')}}}
  else if(a==='view'){stopAll();setView(id)}
  else if(a==='cat'){data.settings.cat=id;save();renderWords()}
  else if(a==='word')openWord(id);
@@ -930,7 +1092,7 @@ renderKanji();renderTools();renderList();renderStreak();
 /* PWA: offline support (GitHub Pages only) */
 if('serviceWorker' in navigator&&location.protocol==='https:'&&!/claude\.ai|claudeusercontent/.test(location.hostname)){
  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});
-}setView(data.settings.view==='kotoba'?'kotoba':'frasa');
+}setView(['kotoba','kaiwa'].indexOf(data.settings.view)>=0?data.settings.view:'frasa');
 })();
 </script>
 </body>
