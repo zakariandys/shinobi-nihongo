@@ -428,7 +428,7 @@ var KANJI=[
  ['目','mata',[['め','me']],[['モク','moku']],[['目','め','me','mata'],['目的','もくてき','mokuteki','tujuan']]],
  ['間','antara; selang',[['あいだ','aida']],[['カン','kan']],[['時間','じかん','jikan','waktu'],['間','あいだ','aida','di antara']]]
 ];
-var KW_CATS=[{id:'resto',name:'Restoran',ic:'🍜',jp:'レストラン',ro:'resutoran'},{id:'kantor',name:'Kantor',ic:'🏢',jp:'会社',ro:'kaisha'},{id:'stasiun',name:'Stasiun',ic:'🚉',jp:'駅',ro:'eki'},{id:'umum',name:'Tempat umum',ic:'🏪',jp:'町',ro:'machi'}];
+var KW_CATS=[{id:'mine',name:'Buatanku',ic:'✨',jp:'自作',ro:'jisaku'},{id:'resto',name:'Restoran',ic:'🍜',jp:'レストラン',ro:'resutoran'},{id:'kantor',name:'Kantor',ic:'🏢',jp:'会社',ro:'kaisha'},{id:'stasiun',name:'Stasiun',ic:'🚉',jp:'駅',ro:'eki'},{id:'umum',name:'Tempat umum',ic:'🏪',jp:'町',ro:'machi'}];
 /* lines: [who ('o' = lawan bicara, 'k' = kamu), jp, romaji, arti] */
 var KAIWA=[
  {id:'r1',cat:'resto',title:'Masuk & dapat meja',other:['店員','ten\'in','Staf'],lines:[
@@ -637,15 +637,21 @@ function renderKanji(){
 
 /* ---------- kaiwa ---------- */
 var kwOpen=null;
-function kwById(id){return KAIWA.filter(function(d){return d.id===id})[0]||null}
+var KW_MAX=10;
+function kwAll(){return (data.kwCustom||[]).concat(KAIWA)}
+function kwById(id){return kwAll().filter(function(d){return d.id===id})[0]||null}
 function renderKaiwa(){
  data.kaiwaDone=data.kaiwaDone||[];var cat=data.settings.kwCat||'resto';
- $('kwCats').innerHTML=KW_CATS.map(function(c){var n=KAIWA.filter(function(d){return d.cat===c.id}).length;return '<button class="chip'+(c.id===cat?' on':'')+'" data-action="kw-cat" data-id="'+c.id+'">'+c.ic+' '+c.name+' '+n+'</button>'}).join('');
+ $('kwCats').innerHTML=KW_CATS.map(function(c){var n=kwAll().filter(function(d){return d.cat===c.id}).length;return '<button class="chip'+(c.id===cat?' on':'')+'" data-action="kw-cat" data-id="'+c.id+'">'+c.ic+' '+c.name+' '+n+'</button>'}).join('');
  var d=kwOpen&&kwById(kwOpen);
  if(!d){
   var c=KW_CATS.filter(function(x){return x.id===cat})[0];
   $('kwBody').innerHTML='<div class="cat-h">'+c.name+' <span class="jpf">'+c.jp+'</span><small>'+c.ro+'</small></div>'+
-   KAIWA.filter(function(x){return x.cat===cat}).map(function(x){var done=data.kaiwaDone.indexOf(x.id)>=0;
+   (cat==='mine'?'<section class="card" style="margin-bottom:12px"><label for="kwSit" class="lbl">Situasi apa yang mau kamu latih?</label>'+
+    '<form class="row" id="kwGenForm" autocomplete="off"><input id="kwSit" class="inp" enterkeyhint="go" placeholder="mis. beli obat flu di apotek"><button class="btn" type="submit">Buat</button></form>'+
+    '<p class="hint">AI membuat dialog 6–8 kalimat: kamu (bentuk sopan) dan lawan bicara. Disimpan 10 dialog terakhir.</p><div id="kwGenMsg"></div></section>'+
+    (kwAll().some(function(x){return x.cat==='mine'})?'':'<p class="empty">Belum ada dialog buatanmu. Ketik situasinya di atas.</p>'):'')+
+   kwAll().filter(function(x){return x.cat===cat}).map(function(x){var done=data.kaiwaDone.indexOf(x.id)>=0;
     return '<button class="kw-card" data-action="kw-open" data-id="'+x.id+'"><span class="kw-ic">'+c.ic+'</span><span><div class="kw-t">'+esc(x.title)+'</div><div class="kw-s">Kamu &amp; <span class="jpf">'+esc(x.other[0])+'</span> '+esc(x.other[1])+' · '+x.lines.length+' kalimat</div></span>'+(done?'<span class="kw-done">✓ Lancar</span>':'')+'</button>'}).join('')+
    '<p class="hint" style="margin-top:6px">Ketuk dialog, lalu putar atau latihan peran. Kamu selalu jadi pihak di sebelah kanan.</p>';
   return;
@@ -653,7 +659,7 @@ function renderKaiwa(){
  var done=data.kaiwaDone.indexOf(d.id)>=0;
  $('kwBody').innerHTML='<div class="kw-head"><button class="btn ghost sm" data-action="kw-back">← Kembali</button><h3>'+esc(d.title)+'</h3></div>'+
   '<div class="kw-actions"><button class="btn sm" data-action="kw-play" data-id="'+d.id+'">▶ Putar dialog</button><button class="btn sm" data-action="kw-role" data-id="'+d.id+'">🎭 Latihan peran</button>'+
-  '<button class="btn ghost sm" data-action="kw-stop">■ Stop</button><button class="btn ghost sm" data-action="kw-done" data-id="'+d.id+'">'+(done?'✓ Lancar':'Tandai lancar')+'</button></div>'+
+  '<button class="btn ghost sm" data-action="kw-stop">■ Stop</button>'+(d.cat==='mine'?'<button class="btn ghost sm" data-action="kw-del" data-id="'+d.id+'">Hapus</button>':'')+'<button class="btn ghost sm" data-action="kw-done" data-id="'+d.id+'">'+(done?'✓ Lancar':'Tandai lancar')+'</button></div>'+
   '<div class="chips" style="margin:0 0 4px">'+[['1','1x'],['3','3x'],['0','Terus']].map(function(r){return '<button class="chip'+(String(data.settings.kwRep||'1')===r[0]?' on':'')+'" data-action="kw-rep" data-id="'+r[0]+'">🔁 '+r[1]+'</button>'}).join('')+'</div>'+
   '<div class="kw-step" id="kwStep"></div><div class="chat">'+
   d.lines.map(function(l,i){var me=l[0]==='k';
@@ -925,6 +931,32 @@ async function callOpenAI(prov,prompt,key,model,plain){
  return String(c||'').replace(/<think>[\s\S]*?<\/think>/gi,'').trim();
 }
 function callProvider(prompt,prov,key,model){return prov==='claude'?callClaude(prompt,key,model):callOpenAI(prov,prompt,key,model)}
+async function askAI(prompt){
+ if(sampleFn)return parseJson(await sampleFn.json(prompt));
+ var k=api.keys[api.provider];if(k)return parseJson(await callProvider(prompt,api.provider,k,api.models[api.provider]));
+ throw {code:'no_engine'};
+}
+function kwPrompt(sit){
+ return 'Kamu guru kaiwa bahasa Jepang untuk orang Indonesia yang tinggal di Jepang. Buat satu dialog pendek dan NATURAL antara "kamu" (pelajar) dan satu lawan bicara yang sesuai situasi berikut.\n\n'+
+ 'Situasi (bahasa Indonesia): """'+sit+'"""\n\n'+
+ 'Aturan: 6-8 baris, bergantian. Baris "k" (kamu) SELALU bentuk sopan sederhana (〜ます/〜です/〜ませんか/〜てください), kalimat pendek yang mudah ditiru. Baris "o" (lawan bicara) natural sesuai perannya (staf boleh pakai keigo umum seperti いらっしゃいませ, かしこまりました). Romaji Hepburn, partikel を ditulis o dan は ditulis wa. Arti dalam bahasa Indonesia santai.\n\n'+
+ 'Balas HANYA JSON valid tanpa markdown:\n'+
+ '{"title":"judul singkat bahasa Indonesia (maks 5 kata)","other":{"jp":"peran lawan bicara dalam bahasa Jepang, mis. 薬剤師","romaji":"...","arti":"peran dalam bahasa Indonesia"},"lines":[{"who":"o atau k","jp":"...","romaji":"...","arti":"..."}]}';
+}
+async function kwGenerate(sit){
+ var msg=$('kwGenMsg');if(msg)msg.innerHTML='<p class="loading">🥷 Sedang membuat dialog…</p>';
+ try{
+  var r=await askAI(kwPrompt(sit)),o=r&&r.other||{};
+  var lines=(Array.isArray(r&&r.lines)?r.lines:[]).map(function(l){l=l||{};return [str(l.who)==='k'?'k':'o',str(l.jp),str(l.romaji),str(l.arti)]}).filter(function(l){return l[1]}).slice(0,12);
+  if(lines.length<2)throw {code:'bad_json'};
+  var d={id:'c'+Date.now().toString(36),cat:'mine',title:str(r.title)||sit.slice(0,30),other:[str(o.jp)||'相手',str(o.romaji)||'aite',str(o.arti)||'Lawan bicara'],lines:lines,src:sit,created:Date.now()};
+  data.kwCustom=[d].concat(data.kwCustom||[]).slice(0,KW_MAX);save();markDay();
+  kwOpen=d.id;renderKaiwa();window.scrollTo&&window.scrollTo(0,0);toast('Dialog dibuat ✓');
+ }catch(e){
+  var c=e&&e.code,m=c==='no_engine'?'Belum ada API key. <button class="link" data-action="open-settings">Isi di Pengaturan ⚙️</button>':c==='bad_key'?'API key ditolak. <button class="link" data-action="open-settings">Cek di Pengaturan ⚙️</button>':c==='rate_limited'?'Terlalu sering. Tunggu sebentar lalu coba lagi.':'Gagal membuat dialog'+(e&&e.message?' ('+esc(e.message)+')':'')+'. Coba lagi ya.';
+  msg=$('kwGenMsg');if(msg)msg.innerHTML='<p class="err">'+m+'</p>';
+ }
+}
 async function translate(q){
  var prompt=buildPrompt(q);
  if(sampleFn)return parseJson(await sampleFn.json(prompt));
@@ -1002,6 +1034,7 @@ function openSettings(){
 
 /* ---------- events ---------- */
 $('askForm').addEventListener('submit',function(e){e.preventDefault();doTranslate()});
+document.addEventListener('submit',function(e){if(e.target&&e.target.id==='kwGenForm'){e.preventDefault();var s=$('kwSit').value.trim();if(s){$('kwSit').blur();kwGenerate(s)}}});
 $('search').addEventListener('input',function(){searchQ=this.value;renderList()});
 $('sheet').addEventListener('click',function(e){if(e.target===this)this.hidden=true});
 $('provider').addEventListener('change',function(){showProvider(this.value)});
@@ -1022,6 +1055,7 @@ document.addEventListener('click',function(e){
  else if(a==='kw-open'){stopAll();kwOpen=id;renderKaiwa();window.scrollTo(0,0)}
  else if(a==='kw-back'){stopAll();kwOpen=null;renderKaiwa()}
  else if(a==='kw-play')kwRun(id,false);
+ else if(a==='kw-del'){if(b.getAttribute('data-armed')){stopAll();data.kwCustom=(data.kwCustom||[]).filter(function(x){return x.id!==id});save();kwOpen=null;renderKaiwa();toast('Dialog dihapus')}else{b.setAttribute('data-armed','1');b.textContent='Yakin? Ketuk lagi'}}
  else if(a==='kw-line')kwLine(id);
  else if(a==='kw-stop'){stopAll();kwClear();var ks=$('kwStep');if(ks)ks.textContent=''}
  else if(a==='kw-rep'){data.settings.kwRep=id;save();var keep=$('kwStep')?$('kwStep').textContent:'';Array.prototype.forEach.call(document.querySelectorAll('[data-action=kw-rep]'),function(x){x.classList.toggle('on',x.getAttribute('data-id')===id)})}
