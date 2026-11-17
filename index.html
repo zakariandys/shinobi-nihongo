@@ -579,11 +579,12 @@ function ago(ts){if(!ts)return 'belum pernah';var d=Math.floor((Date.now()-ts)/8
 
 /* ---------- list ---------- */
 var searchQ='',ACTIVE_MAX=10,queued=0;
+var HIST_MAX=5;
 function view(){
  var q=searchQ.trim().toLowerCase();
  var ps=data.phrases.filter(function(p){return !q||[p.jp,p.kana,p.romaji,p.arti,p.src].join(' ').toLowerCase().indexOf(q)>=0});
  ps.sort(function(a,b){return (b.created||0)-(a.created||0)});
- return ps;
+ return q?ps:ps.slice(0,HIST_MAX);
 }
 function detailHtml(p){
  var h='';
@@ -604,7 +605,7 @@ function cardHtml(p){
 function renderTools(){}
 function renderList(){
  var ps=view();
- $('count').textContent=ps.length+' frasa';
+ $('count').textContent=searchQ.trim()?ps.length+' hasil':ps.length+' terakhir';
  $('list').innerHTML=ps.length?ps.map(cardHtml).join(''):
   '<p class="empty">'+(searchQ?'Tidak ada frasa yang cocok.':'Belum ada riwayat. Ketik kegiatanmu di atas.')+'</p>';
 }
