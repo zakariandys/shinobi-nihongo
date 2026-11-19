@@ -212,6 +212,13 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
 .kn-cell.m{border-color:var(--green);background:#25392E}
 .kn-cell.w{border-color:#6B3E36;background:var(--tint)}
 .kn-sum{font-size:28px;font-weight:800;margin:6px 0}
+.n5-s{font-size:22px;font-weight:700;line-height:1.5}
+.n5-s u{text-decoration:none;border-bottom:2px solid var(--accent);display:inline-block;min-width:2.2em}
+.n5-big{font-size:52px;font-weight:700;line-height:1.2}
+.n5-ro{display:block;font-size:12px;color:var(--mute);font-weight:600;font-family:Nunito,sans-serif;margin-top:2px}
+.kn-ch.jpf{font-size:24px}
+.kn-ch.kn-k{font-size:34px}
+.kn-ch.n5-t{font-size:15px;font-weight:700;padding:12px 8px;line-height:1.3}
 .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);opacity:0;background:#F3EDE4;color:#1E2433;font-size:14px;padding:10px 16px;border-radius:12px;transition:.25s;z-index:60;max-width:90vw;text-align:center;pointer-events:none}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 </style>
@@ -225,7 +232,7 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
   <button class="gear" data-action="open-settings" aria-label="Pengaturan">⚙️</button>
  </header>
  <div class="track" aria-hidden="true"></div>
- <div class="tabs" id="tabs"><button data-action="view" data-id="frasa">💬 Frasa</button><button data-action="view" data-id="kotoba">📖 Kotoba</button><button data-action="view" data-id="kaiwa">🗣️ Kaiwa</button><button data-action="view" data-id="kana">あ Kana</button></div>
+ <div class="tabs" id="tabs"><button data-action="view" data-id="frasa">💬 Frasa</button><button data-action="view" data-id="kotoba">📖 Kotoba</button><button data-action="view" data-id="kaiwa">🗣️ Kaiwa</button><button data-action="view" data-id="kana">📝 Latihan</button></div>
  <div id="viewFrasa">
 
  <section id="kanji"></section>
@@ -246,7 +253,7 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
  </section>
  <section id="list"></section>
  </div>
- <div id="viewKana" hidden><section id="knBody"></section></div>
+ <div id="viewKana" hidden><div class="seg" id="latSeg" style="margin:0 0 14px"></div><section id="knBody"></section></div>
  <div id="viewKaiwa" hidden>
   <div class="cats" id="kwCats" style="margin-top:0"></div>
   <section id="kwBody"></section>
@@ -745,7 +752,7 @@ function renderKana(){
   el.innerHTML='<div class="kn-q"><div class="kn-top"><span>'+(KN.i+1)+' / '+KN.list.length+'</span><span>✓ '+KN.ok+'</span></div>'+
    (q.mode==='read'?'<div class="kn-big jpf">'+esc(it.k)+'</div><div class="kn-ask">Ini dibaca apa?</div>':
     '<button class="kn-sound" data-action="kn-hear">🔊</button><div class="kn-ask">Dengarkan, lalu pilih '+(it.s==='h'?'hiragana':'katakana')+'-nya</div>')+
-   '<div class="kn-choices">'+q.choices.map(function(c,i){return '<button class="kn-ch'+(q.mode==='listen'?' jpf':'')+'" data-action="kn-ans" data-id="'+i+'">'+esc(q.mode==='read'?c.r:c.k)+'</button>'}).join('')+'</div>'+
+   '<div class="kn-choices">'+q.choices.map(function(c,i){return '<button class="kn-ch'+(q.mode==='listen'?' jpf kn-k':'')+'" data-action="kn-ans" data-id="'+i+'">'+esc(q.mode==='read'?c.r:c.k)+'</button>'}).join('')+'</div>'+
    '<div class="kn-fb" id="knFb"></div><div id="knTip"></div>'+
    '<div class="btns" style="justify-content:center"><button class="btn sm" id="knNextBtn" data-action="kn-next" hidden>Lanjut →</button><button class="btn ghost sm" data-action="kn-quit">Selesai</button></div></div>';
   return;
@@ -771,6 +778,147 @@ function renderKana(){
   h+='<div class="kn-grid">'+pool.map(function(x){var s=st.stats[x.k],cls=knMastered(x.k)?' m':(s&&s.w>s.c?' w':'');return '<button class="kn-cell'+cls+'" data-action="kn-say" data-text="'+esc(x.k)+'"><span class="k jpf">'+esc(x.k)+'</span><span class="r">'+esc(x.r)+'</span></button>'}).join('')+'</div>';
  }
  el.innerHTML=h;
+}
+
+/* ---------- N5 ---------- */
+/* grammar: [question jp with ＿＿, romaji, arti, [[opt jp, opt romaji]...] (first = correct), explanation] */
+var N5G=[
+ ['わたし＿＿がくせいです。','watashi ___ gakusei desu.','Saya pelajar.',[['は','wa'],['を','o'],['に','ni'],['で','de']],'は (dibaca wa) menandai topik kalimat: "tentang saya, ...".'],
+ ['パン＿＿たべます。','pan ___ tabemasu.','Saya makan roti.',[['を','o'],['が','ga'],['に','ni'],['で','de']],'を menandai objek yang dikenai kata kerja (yang dimakan = roti).'],
+ ['がっこう＿＿いきます。','gakkou ___ ikimasu.','Pergi ke sekolah.',[['に','ni'],['を','o'],['で','de'],['と','to']],'に menandai tujuan gerakan (ke ...). へ (e) juga bisa dipakai.'],
+ ['としょかん＿＿べんきょうします。','toshokan ___ benkyou shimasu.','Belajar di perpustakaan.',[['で','de'],['に','ni'],['を','o'],['が','ga']],'で menandai tempat terjadinya kegiatan. に dipakai untuk tempat keberadaan (ada/tinggal), bukan kegiatan.'],
+ ['ともだち＿＿えいがをみます。','tomodachi ___ eiga o mimasu.','Menonton film bersama teman.',[['と','to'],['を','o'],['に','ni'],['で','de']],'と artinya "bersama/dengan" seseorang.'],
+ ['つくえのうえ＿＿ねこがいます。','tsukue no ue ___ neko ga imasu.','Ada kucing di atas meja.',[['に','ni'],['で','de'],['を','o'],['と','to']],'Dengan います/あります (ada), tempatnya ditandai に, bukan で.'],
+ ['これはわたし＿＿ほんです。','kore wa watashi ___ hon desu.','Ini buku saya.',[['の','no'],['が','ga'],['を','o'],['に','ni']],'の menyatakan kepemilikan: わたしの = milik saya.'],
+ ['バス＿＿かいしゃにいきます。','basu ___ kaisha ni ikimasu.','Pergi ke kantor naik bus.',[['で','de'],['に','ni'],['を','o'],['と','to']],'で juga menandai alat/kendaraan: バスで = dengan bus.'],
+ ['７じ＿＿おきます。','shichi-ji ___ okimasu.','Bangun jam 7.',[['に','ni'],['で','de'],['を','o'],['と','to']],'Waktu yang spesifik (jam, tanggal) ditandai に.'],
+ ['あそこにだれ＿＿いますか。','asoko ni dare ___ imasu ka.','Siapa yang ada di sana?',[['が','ga'],['は','wa'],['を','o'],['で','de']],'Setelah kata tanya (だれ, なに) sebagai subjek, pakai が, bukan は.'],
+ ['うち＿＿えきまであるきます。','uchi ___ eki made arukimasu.','Jalan kaki dari rumah sampai stasiun.',[['から','kara'],['まで','made'],['に','ni'],['で','de']],'から = dari, まで = sampai.'],
+ ['９じ＿＿はたらきます。','ku-ji ___ hatarakimasu.','Bekerja sampai jam 9.',[['まで','made'],['から','kara'],['を','o'],['が','ga']],'まで = sampai (batas waktu atau tempat).'],
+ ['きのう、えいがを＿＿。','kinou, eiga o ___.','Kemarin saya menonton film.',[['みました','mimashita'],['みます','mimasu'],['みません','mimasen'],['みましょう','mimashou']],'きのう (kemarin) → pakai bentuk lampau 〜ました.'],
+ ['あした、なにを＿＿。','ashita, nani o ___.','Besok mau ngapain?',[['しますか','shimasu ka'],['しましたか','shimashita ka'],['しませんでしたか','shimasen deshita ka'],['して','shite']],'あした (besok) → bentuk sekarang/akan datang 〜ます.'],
+ ['いっしょにひるごはんを＿＿。','issho ni hirugohan o ___.','Mau makan siang bareng?',[['たべませんか','tabemasen ka'],['たべました','tabemashita'],['たべません','tabemasen'],['たべて','tabete']],'〜ませんか dipakai untuk mengajak dengan sopan: "Mau ... bareng?"'],
+ ['まどを＿＿ください。','mado o ___ kudasai.','Tolong buka jendelanya.',[['あけて','akete'],['あける','akeru'],['あけます','akemasu'],['あけた','aketa']],'Meminta tolong: bentuk 〜て + ください.'],
+ ['ここでしゃしんをとって＿＿いいですか。','koko de shashin o totte ___ ii desu ka.','Boleh foto di sini?',[['も','mo'],['は','wa'],['を','o'],['が','ga']],'Minta izin: 〜てもいいですか = bolehkah ...?'],
+ ['わたしはにほんへ＿＿です。','watashi wa nihon e ___ desu.','Saya ingin pergi ke Jepang.',[['いきたい','ikitai'],['いきます','ikimasu'],['いって','itte'],['いった','itta']],'Ingin: ganti ます jadi たい → いきます → いきたいです.'],
+ ['このりんごは＿＿です。','kono ringo wa ___ desu.','Apel ini enak.',[['おいしい','oishii'],['おいしいな','oishii na'],['おいしく','oishiku'],['おいしくて','oishikute']],'Kata sifat 〜い langsung diikuti です tanpa tambahan.'],
+ ['しずか＿＿へやです。','shizuka ___ heya desu.','Kamar yang tenang.',[['な','na'],['の','no'],['い','i'],['に','ni']],'Kata sifat 〜な (しずか) memakai な sebelum kata benda.'],
+ ['きょうはさむく＿＿です。','kyou wa samuku ___ desu.','Hari ini tidak dingin.',[['ない','nai'],['いない','inai'],['じゃない','ja nai'],['くない','kunai']],'Negatif kata sifat 〜い: さむい → さむくない.'],
+ ['きのうはあめ＿＿。','kinou wa ame ___.','Kemarin hujan.',[['でした','deshita'],['です','desu'],['ます','masu'],['ではありません','dewa arimasen']],'Lampau dari です adalah でした.'],
+ ['えいがは＿＿じからですか。','eiga wa ___-ji kara desu ka.','Filmnya mulai jam berapa?',[['なん','nan'],['なに','nani'],['どこ','doko'],['だれ','dare']],'Jam berapa = なんじ. Sebelum satuan hitungan, 何 dibaca なん.'],
+ ['トイレは＿＿ですか。','toire wa ___ desu ka.','Toiletnya di mana?',[['どこ','doko'],['だれ','dare'],['いつ','itsu'],['なに','nani']],'どこ = di mana.'],
+ ['たんじょうびは＿＿ですか。','tanjoubi wa ___ desu ka.','Ulang tahunnya kapan?',[['いつ','itsu'],['どこ','doko'],['だれ','dare'],['どれ','dore']],'いつ = kapan.'],
+ ['このかばんは＿＿ですか。','kono kaban wa ___ desu ka.','Tas ini berapa harganya?',[['いくら','ikura'],['いくつ','ikutsu'],['なん','nan'],['どう','dou']],'いくら = berapa (harga). いくつ = berapa buah/umur.'],
+ ['りんごを＿＿ください。','ringo o ___ kudasai.','Tolong apelnya dua buah.',[['ふたつ','futatsu'],['ふたり','futari'],['にまい','nimai'],['にだい','nidai']],'Benda umum dihitung 〜つ. ふたり untuk orang, 〜まい untuk benda tipis, 〜だい untuk mesin/kendaraan.'],
+ ['ごはんをたべた＿＿、はをみがきます。','gohan o tabeta ___, ha o migakimasu.','Setelah makan, sikat gigi.',[['あとで','ato de'],['まえに','mae ni'],['ながら','nagara'],['から','kara']],'Bentuk 〜た + あとで = setelah ...'],
+ ['ねる＿＿ほんをよみます。','neru ___ hon o yomimasu.','Sebelum tidur, membaca buku.',[['まえに','mae ni'],['あとで','ato de'],['ながら','nagara'],['だけ','dake']],'Bentuk kamus + まえに = sebelum ...'],
+ ['へやは＿＿ではありません。','heya wa ___ dewa arimasen.','Kamarnya tidak bersih.',[['きれい','kirei'],['きれいな','kirei na'],['きれく','kireku'],['きれいに','kirei ni']],'きれい adalah kata sifat 〜な (walau berakhiran い). Negatifnya きれいではありません.'],
+ ['ちょっとまって＿＿。','chotto matte ___.','Tolong tunggu sebentar.',[['ください','kudasai'],['くださる','kudasaru'],['します','shimasu'],['いきます','ikimasu']],'〜てください = tolong ...'],
+ ['にほんごはぜんぜん＿＿。','nihongo wa zenzen ___.','Saya sama sekali tidak mengerti bahasa Jepang.',[['わかりません','wakarimasen'],['わかります','wakarimasu'],['わかりました','wakarimashita'],['わかって','wakatte']],'ぜんぜん (sama sekali) selalu diikuti bentuk negatif.'],
+ ['あには２５さい＿＿。','ani wa nijuugo-sai ___.','Kakak laki-laki saya umur 25.',[['です','desu'],['います','imasu'],['あります','arimasu'],['します','shimasu']],'Menyatakan "X adalah Y" (umur, pekerjaan) pakai です.'],
+ ['へやにテレビが＿＿。','heya ni terebi ga ___.','Di kamar ada TV.',[['あります','arimasu'],['います','imasu'],['です','desu'],['します','shimasu']],'あります untuk benda mati, います untuk makhluk hidup (orang, hewan).'],
+ ['こうえんにこどもが＿＿。','kouen ni kodomo ga ___.','Di taman ada anak-anak.',[['います','imasu'],['あります','arimasu'],['です','desu'],['いきます','ikimasu']],'Makhluk hidup → います.']
+];
+var N5_SEC={bunpou:['文法','bunpou','Tata bahasa'],moji:['文字','moji','Huruf/kanji'],goi:['語彙','goi','Kosakata'],choukai:['聴解','choukai','Mendengar']};
+function n5St(){data.n5=data.n5||{stats:{},sec:{}};return data.n5}
+function hasKanji(s){return /[一-龯]/.test(s)}
+var N5V=null;
+function n5Vocab(){
+ if(N5V)return N5V;var seen={},out=[];
+ KANJI.forEach(function(k){k[4].forEach(function(e){if(!seen[e[0]]){seen[e[0]]=1;out.push({jp:e[0],kana:e[1],ro:e[2],arti:e[3]})}})});
+ PACKS.forEach(function(p){p.words.forEach(function(w){if(!seen[w[0]]){seen[w[0]]=1;out.push({jp:w[0],kana:w[1],ro:w[2],arti:w[3]})}})});
+ return N5V=out;
+}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function pickOthers(pool,key,correct,n){var seen={},out=[];seen[correct[key]]=1;shuffle(pool.slice()).forEach(function(x){if(out.length<n&&!seen[x[key]]){seen[x[key]]=1;out.push(x)}});return out}
+function n5Make(id){
+ var p=id.split(':'),t=p[0];
+ if(t==='g'){var g=N5G[+p[1]],opts=g[3].map(function(o,i){return {t:o[0],ro:o[1],ok:i===0}});
+  return {id:id,sec:'bunpou',html:'<div class="n5-s jpf">'+esc(g[0]).replace('＿＿','<u>　　</u>')+'</div><div class="ro">'+esc(g[1])+'</div><div class="idn">'+esc(g[2])+'</div>',ask:'Pilih yang tepat untuk ＿＿',opts:shuffle(opts),expl:g[4]}}
+ var V=n5Vocab();
+ if(t==='l'){var d=kwById(p[1]),l=d&&d.lines[+p[2]];if(!l)return null;
+  var others=KAIWA.reduce(function(a,x){return a.concat(x.lines.map(function(y){return {arti:y[3],jp:y[1]}}))},[]).filter(function(y){return y.jp!==l[1]});
+  var o=pickOthers(others,'arti',{arti:l[3]},3).map(function(y){return {t:y.arti,ok:false}});o.push({t:l[3],ok:true});
+  return {id:id,sec:'choukai',audio:l[1],html:'',ask:'Dengarkan. Apa artinya?',opts:shuffle(o),expl:'<span class="jpf">'+esc(l[1])+'</span><br><span class="ro-s">'+esc(l[2])+'</span>',textOpts:true}}
+ var w=V.filter(function(x){return x.jp===p[1]})[0];if(!w)return null;
+ var line='<span class="jpf">'+esc(w.jp)+'</span>'+(w.kana!==w.jp?' (<span class="jpf">'+esc(w.kana)+'</span>)':'')+' · '+esc(w.ro)+' = '+esc(w.arti);
+ if(t==='r'){var o2=pickOthers(V.filter(function(x){return x.kana.length>=w.kana.length-1&&x.kana.length<=w.kana.length+1}).concat(V),'kana',w,3).map(function(x){return {t:x.kana,ro:x.ro,ok:false}});o2.push({t:w.kana,ro:w.ro,ok:true});
+  return {id:id,sec:'moji',html:'<div class="n5-big jpf">'+esc(w.jp)+'</div>',ask:'Cara bacanya?',opts:shuffle(o2),expl:line}}
+ if(t==='w'){var o3=pickOthers(V.filter(function(x){return hasKanji(x.jp)}),'jp',w,3).map(function(x){return {t:x.jp,ok:false}});o3.push({t:w.jp,ok:true});
+  return {id:id,sec:'moji',html:'<div class="n5-big jpf" style="font-size:40px">'+esc(w.kana)+'</div><div class="ro">'+esc(w.ro)+'</div>',ask:'Tulisan kanjinya?',opts:shuffle(o3),expl:line}}
+ if(t==='m'){var o4=pickOthers(V,'arti',w,3).map(function(x){return {t:x.arti,ok:false}});o4.push({t:w.arti,ok:true});
+  return {id:id,sec:'goi',html:'<div class="n5-big jpf" style="font-size:44px">'+esc(w.jp)+'</div>'+(w.kana!==w.jp?'<div class="kana jpf">'+esc(w.kana)+'</div>':'')+'<div class="ro">'+esc(w.ro)+'</div>',ask:'Artinya?',opts:shuffle(o4),expl:line,textOpts:true}}
+ return null;
+}
+function n5Ids(){
+ var ids=[],V=n5Vocab();
+ N5G.forEach(function(_,i){ids.push('g:'+i)});
+ V.forEach(function(w){if(hasKanji(w.jp)){ids.push('r:'+w.jp);ids.push('w:'+w.jp)}ids.push('m:'+w.jp)});
+ KAIWA.forEach(function(d){d.lines.forEach(function(l,i){if(l[0]==='o'&&l[1].length<=22)ids.push('l:'+d.id+':'+i)})});
+ return ids;
+}
+var N5Q={list:[],i:0,ok:0,q:null,answered:false,done:false,res:{}};
+function n5Pick(n){
+ var st=n5St().stats,ids=n5Ids(),bySec={bunpou:[],moji:[],goi:[],choukai:[]};
+ ids.forEach(function(id){var s=id[0]==='g'?'bunpou':id[0]==='l'?'choukai':id[0]==='m'?'goi':'moji';bySec[s].push(id)});
+ var plan=['bunpou','bunpou','bunpou','moji','moji','goi','goi','choukai','choukai','bunpou'].slice(0,n),out=[],used={};
+ plan.forEach(function(sec){
+  var pool=bySec[sec].filter(function(id){return !used[id]});
+  var w=pool.map(function(id){var s=st[id];return s?Math.max(0.2,1+s.w*2-s.c*0.6):1.6}),tot=w.reduce(function(a,b){return a+b},0),r=Math.random()*tot,j=0;
+  for(;j<pool.length;j++){r-=w[j];if(r<=0)break}
+  var id=pool[Math.min(j,pool.length-1)];used[id]=1;out.push(id);
+ });
+ return shuffle(out);
+}
+function n5Start(list){N5Q.list=list||n5Pick(10);N5Q.i=0;N5Q.ok=0;N5Q.res={};N5Q.wrong=[];N5Q.done=false;n5Next()}
+function n5Next(){
+ while(N5Q.i<N5Q.list.length){N5Q.q=n5Make(N5Q.list[N5Q.i]);if(N5Q.q)break;N5Q.i++}
+ if(N5Q.i>=N5Q.list.length){N5Q.q=null;N5Q.done=true;markDay();renderLatihan();return}
+ N5Q.answered=false;renderLatihan();
+ if(N5Q.q.audio){var a=N5Q.q.audio;setTimeout(function(){speak(a,'ja',0.85,true).catch(function(){})},200)}
+}
+function n5Answer(i){
+ if(!N5Q.q||N5Q.answered)return;N5Q.answered=true;
+ var q=N5Q.q,ok=q.opts[i].ok,st=n5St(),s=st.stats[q.id]||(st.stats[q.id]={c:0,w:0});
+ if(ok){s.c++;N5Q.ok++}else{s.w++;N5Q.wrong.push(q.id)}
+ var sec=st.sec[q.sec]||(st.sec[q.sec]={c:0,n:0});sec.n++;if(ok)sec.c++;
+ var r=N5Q.res[q.sec]||(N5Q.res[q.sec]={c:0,n:0});r.n++;if(ok)r.c++;
+ save();
+ Array.prototype.forEach.call(document.querySelectorAll('.kn-ch'),function(b,j){if(q.opts[j].ok)b.classList.add('ok');else if(j===i)b.classList.add('no')});
+ var fb=$('knFb');fb.className='kn-fb '+(ok?'ok':'no');fb.textContent=ok?'✓ Benar!':'✗ Belum tepat';
+ $('knTip').innerHTML='<p class="kn-tip">💡 '+(q.sec==='bunpou'?esc(q.expl):q.expl)+'</p>';
+ $('knNextBtn').hidden=false;
+ if(q.audio)speak(q.audio,'ja',0.85,true).catch(function(){});
+}
+function renderN5(){
+ var el=$('knBody'),st=n5St();
+ if(N5Q.q){
+  var q=N5Q.q,S=N5_SEC[q.sec];
+  el.innerHTML='<div class="kn-q"><div class="kn-top"><span>'+(N5Q.i+1)+' / '+N5Q.list.length+' · <span class="jpf">'+S[0]+'</span> '+S[1]+'</span><span>✓ '+N5Q.ok+'</span></div>'+
+   (q.audio?'<button class="kn-sound" data-action="n5-hear">🔊</button>':'<div style="margin:10px 0 6px">'+q.html+'</div>')+
+   '<div class="kn-ask">'+esc(q.ask)+'</div><div class="kn-choices'+(q.textOpts?' n5-text':'')+'">'+
+   q.opts.map(function(o,i){return '<button class="kn-ch'+(q.textOpts?' n5-t':' jpf')+'" data-action="n5-ans" data-id="'+i+'">'+esc(o.t)+(o.ro?'<small class="n5-ro">'+esc(o.ro)+'</small>':'')+'</button>'}).join('')+'</div>'+
+   '<div class="kn-fb" id="knFb"></div><div id="knTip"></div>'+
+   '<div class="btns" style="justify-content:center"><button class="btn sm" id="knNextBtn" data-action="n5-next" hidden>Lanjut →</button><button class="btn ghost sm" data-action="n5-quit">Selesai</button></div></div>';
+  return;
+ }
+ var secBars=Object.keys(N5_SEC).map(function(k){var S=N5_SEC[k],s=st.sec[k]||{c:0,n:0},pct=s.n?Math.round(s.c/s.n*100):0;
+  return '<div class="kn-bar"><span><span class="jpf">'+S[0]+'</span> '+S[2]+'</span><div class="kn-track"><div class="kn-fill" style="width:'+pct+'%"></div></div><b>'+(s.n?pct+'%':'–')+'</b></div>'}).join('');
+ var h='<div class="cat-h" style="margin-top:0">JLPT N5 <span class="jpf">日本語能力試験</span><small>nihongo nouryoku shiken</small></div>'+
+  '<div class="kn-prog">'+secBars+'</div>';
+ if(N5Q.done){
+  h+='<div class="kn-q"><div class="kn-sum">'+N5Q.ok+' / '+N5Q.list.length+'</div><div class="kn-ask">'+Object.keys(N5Q.res).map(function(k){return '<span class="jpf">'+N5_SEC[k][0]+'</span> '+N5Q.res[k].c+'/'+N5Q.res[k].n}).join(' · ')+'</div>'+
+   '<div class="btns" style="justify-content:center">'+(N5Q.wrong.length?'<button class="btn sm" data-action="n5-retry">Ulangi yang salah</button>':'')+'<button class="btn ghost sm" data-action="n5-start">Sesi baru</button></div></div>';
+ }else{
+  h+='<div class="btns"><button class="btn" data-action="n5-start">▶ Mulai 10 soal</button></div>'+
+   '<p class="hint">Campuran tata bahasa, baca/tulis kanji, kosakata, dan mendengar. Setiap jawaban langsung ada pembahasan. Soal yang salah akan lebih sering muncul. Tidak apa-apa kalau masih banyak menebak, justru dari situ belajarnya.</p>';
+ }
+ el.innerHTML=h;
+}
+function renderLatihan(){
+ var sub=data.settings.lat||'kana';
+ $('latSeg').innerHTML='<button class="'+(sub==='kana'?'on':'')+'" data-action="lat" data-id="kana">あ Kana</button><button class="'+(sub==='n5'?'on':'')+'" data-action="lat" data-id="n5">📝 N5</button>';
+ if(sub==='n5')renderN5();else renderKana();
 }
 
 /* ---------- kaiwa ---------- */
@@ -873,7 +1021,7 @@ function setView(v){
  data.settings.view=v;save();
  Array.prototype.forEach.call($('tabs').children,function(b){b.classList.toggle('on',b.getAttribute('data-id')===v)});
  $('viewFrasa').hidden=v!=='frasa';$('viewKotoba').hidden=v!=='kotoba';$('viewKaiwa').hidden=v!=='kaiwa';$('viewKana').hidden=v!=='kana';
- if(v==='kotoba')renderWords();if(v==='kaiwa')renderKaiwa();if(v==='kana')renderKana();
+ if(v==='kotoba')renderWords();if(v==='kaiwa')renderKaiwa();if(v==='kana')renderLatihan();
 }
 function renderWords(){
  var q=wSearch.trim().toLowerCase(),c=data.settings.cat;
@@ -1193,15 +1341,22 @@ document.addEventListener('click',function(e){
  else if(a==='kw-open'){stopAll();kwOpen=id;renderKaiwa();window.scrollTo(0,0)}
  else if(a==='kw-back'){stopAll();kwOpen=null;renderKaiwa()}
  else if(a==='kn-start'){stopAll();knStart()}
+ else if(a==='lat'){stopAll();KN.q=null;N5Q.q=null;data.settings.lat=id;save();renderLatihan()}
+ else if(a==='n5-start'){stopAll();n5Start()}
+ else if(a==='n5-retry'){var wl=N5Q.wrong.slice();n5Start(shuffle(wl.concat(n5Pick(Math.max(0,10-wl.length)).filter(function(x){return wl.indexOf(x)<0}))).slice(0,10))}
+ else if(a==='n5-ans')n5Answer(+id);
+ else if(a==='n5-next'){if(N5Q.q){N5Q.i++;n5Next()}}
+ else if(a==='n5-quit'){stopAll();var answered=N5Q.answered?N5Q.i+1:N5Q.i;N5Q.q=null;N5Q.done=answered>0;N5Q.list=N5Q.list.slice(0,answered);renderLatihan()}
+ else if(a==='n5-hear'){if(N5Q.q&&N5Q.q.audio)speak(N5Q.q.audio,'ja',0.85,true).catch(audioFail)}
  else if(a==='kn-retry'){var wl=KN.wrong.slice(),more=wl.concat(wl).concat(knPick(KN.pool,Math.max(0,10-wl.length*2)));knStart(more.sort(function(){return Math.random()-0.5}))}
  else if(a==='kn-ans')knAnswer(+id);
  else if(a==='kn-next'){if(KN.q){KN.i++;knNext()}}
  else if(a==='kn-quit'){stopAll();KN.q=null;KN.done=KN.i>0;if(KN.done){KN.list=KN.list.slice(0,KN.i)}renderKana()}
  else if(a==='kn-hear'){if(KN.q)speak(KN.q.it.k,'ja',0.8).catch(audioFail)}
  else if(a==='kn-say'){speak(b.getAttribute('data-text'),'ja',0.8).catch(audioFail)}
- else if(a==='kn-script'){knSt().script=id;KN.done=false;save();renderKana()}
- else if(a==='kn-level'){knSt().level=+id;KN.done=false;save();renderKana()}
- else if(a==='kn-grid'){KN.grid=!KN.grid;KN.done=false;renderKana()}
+ else if(a==='kn-script'){knSt().script=id;KN.done=false;save();renderLatihan()}
+ else if(a==='kn-level'){knSt().level=+id;KN.done=false;save();renderLatihan()}
+ else if(a==='kn-grid'){KN.grid=!KN.grid;KN.done=false;renderLatihan()}
  else if(a==='kw-play')kwRun(id,false);
  else if(a==='kw-del'){if(b.getAttribute('data-armed')){stopAll();data.kwCustom=(data.kwCustom||[]).filter(function(x){return x.id!==id});save();kwOpen=null;renderKaiwa();toast('Dialog dihapus')}else{b.setAttribute('data-armed','1');b.textContent='Yakin? Ketuk lagi'}}
  else if(a==='kw-line')kwLine(id);
