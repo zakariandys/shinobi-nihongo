@@ -120,7 +120,7 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
 .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .ok{color:var(--green);font-size:13px;font-weight:700}
 .tabs{display:flex;gap:6px;background:var(--field);border:1px solid var(--line);border-radius:14px;padding:4px;margin:0 0 14px}
-.tabs button{flex:1;border:0;background:none;border-radius:11px;padding:10px 4px;font-weight:800;font-size:15px;color:var(--mute)}
+.tabs button{flex:1;border:0;background:none;border-radius:11px;padding:10px 2px;font-weight:800;font-size:13.5px;color:var(--mute)}
 .tabs button.on{background:#3A4560;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.35)}
 .cats{display:flex;gap:6px;overflow-x:auto;margin:10px -14px 4px;padding:0 14px 4px;scrollbar-width:none}
 .cats::-webkit-scrollbar{display:none}
@@ -183,6 +183,35 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
 .bub.hidejp .jp,.bub.hidejp .ro{visibility:hidden}
 .bub-row{display:flex;gap:6px;margin-top:4px}
 .bub-row button{background:transparent;border:1.5px solid var(--line);color:var(--ink);border-radius:10px;padding:3px 9px;font-size:12.5px}
+.kn-prog{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.kn-bar{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700}
+.kn-bar span:first-child{width:86px}
+.kn-track{flex:1;height:8px;background:var(--field);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.kn-fill{height:100%;background:var(--green);border-radius:99px}
+.kn-bar b{width:52px;text-align:right;color:var(--mute);font-weight:700}
+.kn-opt{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.kn-lbl{font-size:12px;font-weight:800;color:var(--mute);margin-top:6px}
+.kn-q{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;text-align:center}
+.kn-top{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mute);font-weight:700}
+.kn-big{font-size:84px;font-weight:700;line-height:1.15;margin:10px 0 4px}
+.kn-ask{font-size:14px;color:var(--mute);margin-bottom:12px}
+.kn-sound{font-size:40px;background:var(--soft);border:0;border-radius:20px;width:110px;height:110px;margin:10px auto 6px;display:block}
+.kn-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kn-ch{background:var(--field);border:1.5px solid var(--line);border-radius:14px;padding:14px 6px;font-size:22px;font-weight:800;color:var(--ink)}
+.kn-ch.jpf{font-size:34px}
+.kn-ch.ok{border-color:var(--green);background:#25392E}
+.kn-ch.no{border-color:var(--accent);background:var(--tint)}
+.kn-fb{min-height:22px;margin:12px 0 4px;font-size:14.5px;font-weight:700}
+.kn-fb.ok{color:var(--green)}
+.kn-fb.no{color:#F2876C}
+.kn-tip{font-size:13px;background:#3A3528;border-radius:12px;padding:8px 10px;margin:8px 0 0;text-align:left}
+.kn-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.kn-cell{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 0;text-align:center}
+.kn-cell .k{font-size:22px;font-weight:700;display:block}
+.kn-cell .r{font-size:11px;color:var(--mute)}
+.kn-cell.m{border-color:var(--green);background:#25392E}
+.kn-cell.w{border-color:#6B3E36;background:var(--tint)}
+.kn-sum{font-size:28px;font-weight:800;margin:6px 0}
 .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);opacity:0;background:#F3EDE4;color:#1E2433;font-size:14px;padding:10px 16px;border-radius:12px;transition:.25s;z-index:60;max-width:90vw;text-align:center;pointer-events:none}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 </style>
@@ -196,7 +225,7 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
   <button class="gear" data-action="open-settings" aria-label="Pengaturan">⚙️</button>
  </header>
  <div class="track" aria-hidden="true"></div>
- <div class="tabs" id="tabs"><button data-action="view" data-id="frasa">💬 Frasa</button><button data-action="view" data-id="kotoba">📖 Kotoba</button><button data-action="view" data-id="kaiwa">🗣️ Kaiwa</button></div>
+ <div class="tabs" id="tabs"><button data-action="view" data-id="frasa">💬 Frasa</button><button data-action="view" data-id="kotoba">📖 Kotoba</button><button data-action="view" data-id="kaiwa">🗣️ Kaiwa</button><button data-action="view" data-id="kana">あ Kana</button></div>
  <div id="viewFrasa">
 
  <section id="kanji"></section>
@@ -217,6 +246,7 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
  </section>
  <section id="list"></section>
  </div>
+ <div id="viewKana" hidden><section id="knBody"></section></div>
  <div id="viewKaiwa" hidden>
   <div class="cats" id="kwCats" style="margin-top:0"></div>
   <section id="kwBody"></section>
@@ -635,6 +665,114 @@ function renderKanji(){
  el.innerHTML=h+'</div>';
 }
 
+/* ---------- kana ---------- */
+var KN_BASIC=[['あ','a'],['い','i'],['う','u'],['え','e'],['お','o'],['か','ka'],['き','ki'],['く','ku'],['け','ke'],['こ','ko'],['さ','sa'],['し','shi'],['す','su'],['せ','se'],['そ','so'],['た','ta'],['ち','chi'],['つ','tsu'],['て','te'],['と','to'],['な','na'],['に','ni'],['ぬ','nu'],['ね','ne'],['の','no'],['は','ha'],['ひ','hi'],['ふ','fu'],['へ','he'],['ほ','ho'],['ま','ma'],['み','mi'],['む','mu'],['め','me'],['も','mo'],['や','ya'],['ゆ','yu'],['よ','yo'],['ら','ra'],['り','ri'],['る','ru'],['れ','re'],['ろ','ro'],['わ','wa'],['を','wo'],['ん','n']];
+var KN_DAKU=[['が','ga'],['ぎ','gi'],['ぐ','gu'],['げ','ge'],['ご','go'],['ざ','za'],['じ','ji'],['ず','zu'],['ぜ','ze'],['ぞ','zo'],['だ','da'],['で','de'],['ど','do'],['ば','ba'],['び','bi'],['ぶ','bu'],['べ','be'],['ぼ','bo'],['ぱ','pa'],['ぴ','pi'],['ぷ','pu'],['ぺ','pe'],['ぽ','po']];
+var KN_YOON=[['きゃ','kya'],['きゅ','kyu'],['きょ','kyo'],['しゃ','sha'],['しゅ','shu'],['しょ','sho'],['ちゃ','cha'],['ちゅ','chu'],['ちょ','cho'],['にゃ','nya'],['にゅ','nyu'],['にょ','nyo'],['ひゃ','hya'],['ひゅ','hyu'],['ひょ','hyo'],['みゃ','mya'],['みゅ','myu'],['みょ','myo'],['りゃ','rya'],['りゅ','ryu'],['りょ','ryo'],['ぎゃ','gya'],['ぎゅ','gyu'],['ぎょ','gyo'],['じゃ','ja'],['じゅ','ju'],['じょ','jo'],['びゃ','bya'],['びゅ','byu'],['びょ','byo'],['ぴゃ','pya'],['ぴゅ','pyu'],['ぴょ','pyo']];
+/* similar-looking pairs: [a, b, hint] (hiragana; katakana derived separately) */
+var KN_SIM=[
+ ['ぬ','め','ぬ (nu) punya lingkaran kecil di ujung, め (me) tidak.'],['る','ろ','る (ru) ada lingkaran di bawah, ろ (ro) tidak.'],
+ ['わ','れ','わ (wa) ujungnya melengkung ke dalam, れ (re) ujungnya keluar seperti kaki.'],['ね','れ','ね (ne) ujungnya berlingkar, れ (re) ujungnya keluar.'],
+ ['さ','ち','さ (sa) dan ち (chi) seperti cermin: lengkung さ menghadap kiri, ち menghadap kanan.'],['は','ほ','ほ (ho) punya garis tambahan di atas, は (ha) tidak.'],
+ ['い','り','い (i) dua garis pendek terpisah, り (ri) garis kanannya lebih panjang turun.'],['き','さ','き (ki) dua garis mendatar, さ (sa) hanya satu.'],
+ ['シ','ツ','シ (shi): titik-titiknya berjajar ke bawah, goresan panjang naik dari bawah. ツ (tsu): titiknya berjajar ke samping, goresan turun dari atas.'],
+ ['ソ','ン','ソ (so): titik di atas, goresan turun dari atas. ン (n): titik di kiri, goresan naik dari bawah.'],
+ ['ク','ケ','ケ (ke) punya garis mendatar yang menembus, ク (ku) tidak.'],['ウ','ワ','ウ (u) punya titik kecil di atas, ワ (wa) tidak.'],
+ ['ス','ヌ','ヌ (nu) punya goresan kecil tambahan di tengah, ス (su) tidak.'],['チ','テ','チ (chi) garis atasnya miring, テ (te) dua garis mendatar lurus.'],
+ ['ハ','ノ','ハ (ha) dua goresan, ノ (no) satu.'],['マ','ム','マ (ma) titik ke bawah tengah, ム (mu) titik di kanan bawah.']
+];
+function knKata(h){return h.split('').map(function(c){var x=c.charCodeAt(0);return x>=0x3041&&x<=0x3096?String.fromCharCode(x+0x60):c}).join('')}
+function knPool(script,level){
+ var src=KN_BASIC.slice();if(level>=2)src=src.concat(KN_DAKU);if(level>=3)src=src.concat(KN_YOON);
+ var out=[];
+ if(script!=='k')src.forEach(function(p){out.push({k:p[0],r:p[1],s:'h'})});
+ if(script!=='h')src.forEach(function(p){out.push({k:knKata(p[0]),r:p[1],s:'k'})});
+ return out;
+}
+function knSt(){data.kana=data.kana||{stats:{},script:'h',level:1};return data.kana}
+function knStat(k){var s=knSt().stats;return s[k]||(s[k]={c:0,w:0,s:0,last:0})}
+function knMastered(k){var s=knSt().stats[k];return !!(s&&s.s>=3)}
+function knSimHint(a,b){for(var i=0;i<KN_SIM.length;i++){var p=KN_SIM[i];if((p[0]===a&&p[1]===b)||(p[0]===b&&p[1]===a))return p[2]}return ''}
+function knSimOf(k){var r=[];KN_SIM.forEach(function(p){if(p[0]===k)r.push(p[1]);else if(p[1]===k)r.push(p[0])});return r}
+var KN={q:null,list:[],i:0,ok:0,wrong:[],answered:false,grid:false};
+function knPick(pool,n){
+ var w=pool.map(function(it){var s=knSt().stats[it.k];return s?Math.max(0.3,1+s.w*1.5-Math.min(s.s,4)*0.3):2.2});
+ var out=[],last=null;
+ for(var i=0;i<n;i++){
+  var tot=0,cand=pool.map(function(it,j){var x=(it.k===last&&pool.length>1)?0:w[j];tot+=x;return x});
+  var r=Math.random()*tot,j=0;for(;j<pool.length;j++){r-=cand[j];if(r<=0)break}
+  j=Math.min(j,pool.length-1);out.push(pool[j]);last=pool[j].k;w[j]*=0.45;
+ }
+ return out;
+}
+function knChoices(it,pool,mode){
+ var same=pool.filter(function(x){return x.s===it.s&&x.r!==it.r});
+ var sim=knSimOf(it.k).map(function(k){return same.filter(function(x){return x.k===k})[0]}).filter(Boolean);
+ var picks=sim.slice(0,2),used={};used[it.r]=1;picks.forEach(function(p){used[p.r]=1});
+ var rest=same.filter(function(x){return !used[x.r]});
+ while(picks.length<3&&rest.length){var j=Math.floor(Math.random()*rest.length);picks.push(rest[j]);used[rest[j].r]=1;rest.splice(j,1)}
+ var all=picks.concat([it]);for(var i=all.length-1;i>0;i--){var k=Math.floor(Math.random()*(i+1));var t=all[i];all[i]=all[k];all[k]=t}
+ return all;
+}
+function knStart(list){
+ var st=knSt(),pool=knPool(st.script,st.level);
+ KN.pool=pool;KN.list=list||knPick(pool,20);KN.i=0;KN.ok=0;KN.wrong=[];knNext();
+}
+function knNext(){
+ if(KN.i>=KN.list.length){KN.q=null;KN.done=true;markDay();renderKana();return}
+ var it=KN.list[KN.i],mode=Math.random()<0.35?'listen':'read';
+ KN.q={it:it,mode:mode,choices:knChoices(it,KN.pool,mode)};KN.answered=false;KN.done=false;renderKana();
+ if(mode==='listen')setTimeout(function(){speak(it.k,'ja',0.8).catch(function(){})},150);
+}
+function knAnswer(idx){
+ if(!KN.q||KN.answered)return;KN.answered=true;
+ var q=KN.q,ch=q.choices[idx],good=ch.r===q.it.r,s=knStat(q.it.k);
+ s.last=Date.now();if(good){s.c++;s.s++;KN.ok++}else{s.w++;s.s=0;KN.wrong.push(q.it);var s2=knStat(ch.k);s2.s=0}
+ save();
+ Array.prototype.forEach.call(document.querySelectorAll('.kn-ch'),function(b,i){var c=q.choices[i];if(c.r===q.it.r)b.classList.add('ok');else if(i===idx)b.classList.add('no')});
+ var fb=$('knFb'),hint=good?'':knSimHint(q.it.k,ch.k);
+ fb.className='kn-fb '+(good?'ok':'no');
+ fb.innerHTML=good?'✓ Benar! <span class="jpf">'+esc(q.it.k)+'</span> = '+esc(q.it.r):'✗ Yang benar: <span class="jpf">'+esc(q.it.k)+'</span> = '+esc(q.it.r)+(q.mode==='read'?' (kamu pilih '+esc(ch.r)+')':' (kamu pilih <span class="jpf">'+esc(ch.k)+'</span> = '+esc(ch.r)+')');
+ $('knTip').innerHTML=hint?'<p class="kn-tip">💡 '+esc(hint)+'</p>':'';
+ $('knNextBtn').hidden=false;
+ speak(q.it.k,'ja',0.85).catch(function(){});
+ if(good)setTimeout(function(){if(KN.q===q){KN.i++;knNext()}},1100);
+}
+function renderKana(){
+ var st=knSt(),el=$('knBody');
+ if(KN.q){
+  var q=KN.q,it=q.it;
+  el.innerHTML='<div class="kn-q"><div class="kn-top"><span>'+(KN.i+1)+' / '+KN.list.length+'</span><span>✓ '+KN.ok+'</span></div>'+
+   (q.mode==='read'?'<div class="kn-big jpf">'+esc(it.k)+'</div><div class="kn-ask">Ini dibaca apa?</div>':
+    '<button class="kn-sound" data-action="kn-hear">🔊</button><div class="kn-ask">Dengarkan, lalu pilih '+(it.s==='h'?'hiragana':'katakana')+'-nya</div>')+
+   '<div class="kn-choices">'+q.choices.map(function(c,i){return '<button class="kn-ch'+(q.mode==='listen'?' jpf':'')+'" data-action="kn-ans" data-id="'+i+'">'+esc(q.mode==='read'?c.r:c.k)+'</button>'}).join('')+'</div>'+
+   '<div class="kn-fb" id="knFb"></div><div id="knTip"></div>'+
+   '<div class="btns" style="justify-content:center"><button class="btn sm" id="knNextBtn" data-action="kn-next" hidden>Lanjut →</button><button class="btn ghost sm" data-action="kn-quit">Selesai</button></div></div>';
+  return;
+ }
+ var bar=function(lbl,s){var p=knPool(s,3).filter(function(x){return KN_BASIC.some(function(b){return (s==='h'?b[0]:knKata(b[0]))===x.k})}),m=p.filter(function(x){return knMastered(x.k)}).length;
+  return '<div class="kn-bar"><span>'+lbl+'</span><div class="kn-track"><div class="kn-fill" style="width:'+Math.round(m/p.length*100)+'%"></div></div><b>'+m+'/'+p.length+'</b></div>'};
+ var h='<div class="cat-h" style="margin-top:0">Kana <span class="jpf">かな</span><small>hiragana &amp; katakana</small></div>'+
+  '<div class="kn-prog">'+bar('Hiragana','h')+bar('Katakana','k')+'</div>';
+ if(KN.done){
+  var wr={};KN.wrong.forEach(function(x){wr[x.k]=x});var wl=Object.keys(wr).map(function(k){return wr[k]});
+  h+='<div class="kn-q"><div class="kn-sum">'+KN.ok+' / '+KN.list.length+'</div><div class="kn-ask">'+(KN.ok===KN.list.length?'Sempurna! 🥷':'Kana yang salah akan lebih sering muncul.')+'</div>'+
+   (wl.length?'<div class="kn-grid">'+wl.map(function(x){return '<button class="kn-cell w" data-action="kn-say" data-text="'+esc(x.k)+'"><span class="k jpf">'+esc(x.k)+'</span><span class="r">'+esc(x.r)+'</span></button>'}).join('')+'</div>':'')+
+   '<div class="btns" style="justify-content:center">'+(wl.length?'<button class="btn sm" data-action="kn-retry">Ulangi yang salah</button>':'')+'<button class="btn ghost sm" data-action="kn-start">Sesi baru</button></div></div>';
+  el.innerHTML=h;return;
+ }
+ h+='<div class="kn-lbl">Huruf</div><div class="kn-opt">'+[['h','あ Hiragana'],['k','ア Katakana'],['m','Campur']].map(function(o){return '<button class="chip'+(st.script===o[0]?' on':'')+'" data-action="kn-script" data-id="'+o[0]+'">'+o[1]+'</button>'}).join('')+'</div>'+
+  '<div class="kn-lbl">Level</div><div class="kn-opt">'+[[1,'Dasar (46)'],[2,'+ Tenten ゛゜'],[3,'+ Kombinasi きゃ']].map(function(o){return '<button class="chip'+(st.level===o[0]?' on':'')+'" data-action="kn-level" data-id="'+o[0]+'">'+o[1]+'</button>'}).join('')+'</div>'+
+  '<div class="btns"><button class="btn" data-action="kn-start">▶ Mulai 20 soal</button><button class="btn ghost" data-action="kn-grid">'+(KN.grid?'Tutup tabel':'Lihat tabel')+'</button></div>'+
+  '<p class="hint">Campuran soal baca (kana → romaji) dan dengar (suara → kana). Kana yang sering salah muncul lebih sering. Hijau = sudah dikuasai (3x benar berturut-turut).</p>';
+ if(KN.grid){
+  var pool=knPool(st.script==='m'?'h':st.script,st.level);
+  if(st.script==='m')pool=pool.concat(knPool('k',st.level));
+  h+='<div class="kn-grid">'+pool.map(function(x){var s=st.stats[x.k],cls=knMastered(x.k)?' m':(s&&s.w>s.c?' w':'');return '<button class="kn-cell'+cls+'" data-action="kn-say" data-text="'+esc(x.k)+'"><span class="k jpf">'+esc(x.k)+'</span><span class="r">'+esc(x.r)+'</span></button>'}).join('')+'</div>';
+ }
+ el.innerHTML=h;
+}
+
 /* ---------- kaiwa ---------- */
 var kwOpen=null;
 var KW_MAX=10;
@@ -734,8 +872,8 @@ function phrasesFor(w){var s=w.stem||w.jp;return data.phrases.filter(function(p)
 function setView(v){
  data.settings.view=v;save();
  Array.prototype.forEach.call($('tabs').children,function(b){b.classList.toggle('on',b.getAttribute('data-id')===v)});
- $('viewFrasa').hidden=v!=='frasa';$('viewKotoba').hidden=v!=='kotoba';$('viewKaiwa').hidden=v!=='kaiwa';
- if(v==='kotoba')renderWords();if(v==='kaiwa')renderKaiwa();
+ $('viewFrasa').hidden=v!=='frasa';$('viewKotoba').hidden=v!=='kotoba';$('viewKaiwa').hidden=v!=='kaiwa';$('viewKana').hidden=v!=='kana';
+ if(v==='kotoba')renderWords();if(v==='kaiwa')renderKaiwa();if(v==='kana')renderKana();
 }
 function renderWords(){
  var q=wSearch.trim().toLowerCase(),c=data.settings.cat;
@@ -1054,6 +1192,16 @@ document.addEventListener('click',function(e){
  else if(a==='kw-cat'){stopAll();data.settings.kwCat=id;save();kwOpen=null;renderKaiwa()}
  else if(a==='kw-open'){stopAll();kwOpen=id;renderKaiwa();window.scrollTo(0,0)}
  else if(a==='kw-back'){stopAll();kwOpen=null;renderKaiwa()}
+ else if(a==='kn-start'){stopAll();knStart()}
+ else if(a==='kn-retry'){var wl=KN.wrong.slice(),more=wl.concat(wl).concat(knPick(KN.pool,Math.max(0,10-wl.length*2)));knStart(more.sort(function(){return Math.random()-0.5}))}
+ else if(a==='kn-ans')knAnswer(+id);
+ else if(a==='kn-next'){if(KN.q){KN.i++;knNext()}}
+ else if(a==='kn-quit'){stopAll();KN.q=null;KN.done=KN.i>0;if(KN.done){KN.list=KN.list.slice(0,KN.i)}renderKana()}
+ else if(a==='kn-hear'){if(KN.q)speak(KN.q.it.k,'ja',0.8).catch(audioFail)}
+ else if(a==='kn-say'){speak(b.getAttribute('data-text'),'ja',0.8).catch(audioFail)}
+ else if(a==='kn-script'){knSt().script=id;KN.done=false;save();renderKana()}
+ else if(a==='kn-level'){knSt().level=+id;KN.done=false;save();renderKana()}
+ else if(a==='kn-grid'){KN.grid=!KN.grid;KN.done=false;renderKana()}
  else if(a==='kw-play')kwRun(id,false);
  else if(a==='kw-del'){if(b.getAttribute('data-armed')){stopAll();data.kwCustom=(data.kwCustom||[]).filter(function(x){return x.id!==id});save();kwOpen=null;renderKaiwa();toast('Dialog dihapus')}else{b.setAttribute('data-armed','1');b.textContent='Yakin? Ketuk lagi'}}
  else if(a==='kw-line')kwLine(id);
@@ -1126,7 +1274,7 @@ renderKanji();renderTools();renderList();renderStreak();
 /* PWA: offline support (GitHub Pages only) */
 if('serviceWorker' in navigator&&location.protocol==='https:'&&!/claude\.ai|claudeusercontent/.test(location.hostname)){
  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});
-}setView(['kotoba','kaiwa'].indexOf(data.settings.view)>=0?data.settings.view:'frasa');
+}setView(['kotoba','kaiwa','kana'].indexOf(data.settings.view)>=0?data.settings.view:'frasa');
 })();
 </script>
 </body>
