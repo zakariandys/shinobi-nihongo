@@ -25,12 +25,21 @@ button{font:inherit;color:inherit;cursor:pointer}
 input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
 /* header */
 .top{display:flex;align-items:center;gap:12px;margin:4px 2px 4px}
-.brand{font-size:26px;font-weight:700;line-height:1.1}
+.brand{font-size:20px;font-weight:700;line-height:1.1;white-space:nowrap}
+.brand-ro{white-space:nowrap}
+.top{gap:8px!important}
+.top svg{width:36px;height:36px}
+.streak{padding:0 9px!important}
+.gear{width:40px!important}
+.top svg{flex:0 0 auto}
+.top>div{min-width:0}
 .brand-ro{font-size:13px;color:var(--mute);margin-top:2px}
-.streak{margin-left:auto;background:var(--card);border:1.5px solid var(--line);border-radius:12px;height:44px;padding:0 12px;font-weight:800;font-size:16px;white-space:nowrap}
+.robtn{margin-left:auto}
+.streak{background:var(--card);border:1.5px solid var(--line);border-radius:12px;height:44px;padding:0 12px;font-weight:800;font-size:16px;white-space:nowrap}
 .streak.today{background:var(--tint);border-color:var(--accent);color:#F2876C}
 .streak.idle{color:var(--mute)}
 .streak.idle .fl{filter:grayscale(1);opacity:.6}
+.streak,.gear{flex:0 0 auto}
 .gear{background:var(--card);border:1.5px solid var(--line);border-radius:12px;width:44px;height:44px;font-size:20px}
 .track{height:2px;margin:12px 2px 14px;background:repeating-linear-gradient(90deg,var(--line) 0 14px,transparent 14px 22px)}
 /* cards & controls */
@@ -219,6 +228,12 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
 .kn-ch.jpf{font-size:24px}
 .kn-ch.kn-k{font-size:34px}
 .kn-ch.n5-t{font-size:15px;font-weight:700;padding:12px 8px;line-height:1.3}
+ruby{ruby-position:over}
+rt{font-size:.48em;color:var(--mute);font-weight:600;letter-spacing:0}
+.jp,.res .jp,.bub .jp,.wd-jp,.w-big,.lp .jpf{line-height:1.75}
+.robtn{background:var(--card);border:1.5px solid var(--line);border-radius:12px;height:44px;padding:0 7px;font-weight:800;font-size:10.5px;white-space:nowrap;flex:0 0 auto;color:var(--mute);line-height:1.1}
+.robtn.on{color:var(--accent);border-color:var(--accent)}
+body.noro .ro,body.noro .ro-s,body.noro .ro-i,body.noro .wd-ro,body.noro .n5-ro,body.noro .kj-rd i,body.noro .lh-ro{display:none}
 .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);opacity:0;background:#F3EDE4;color:#1E2433;font-size:14px;padding:10px 16px;border-radius:12px;transition:.25s;z-index:60;max-width:90vw;text-align:center;pointer-events:none}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 </style>
@@ -227,7 +242,8 @@ input,select,textarea{font:inherit;font-size:16px;color:var(--ink)}
 <div class="wrap">
  <header class="top">
   <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="23" r="17" fill="#3A4560" stroke="#55628A" stroke-width="1.5"/><rect x="8" y="17" width="28" height="11" rx="5.5" fill="#FFE3C8"/><circle cx="16.5" cy="22.5" r="2.2" fill="#1E2433"/><circle cx="27.5" cy="22.5" r="2.2" fill="#1E2433"/><circle cx="17.2" cy="21.8" r=".7" fill="#fff"/><circle cx="28.2" cy="21.8" r=".7" fill="#fff"/><rect x="6" y="11" width="32" height="5" rx="2.5" fill="#E06B4F"/><path d="M37 13.5l5-4M37 14l5 2.5" stroke="#E06B4F" stroke-width="3" stroke-linecap="round"/></svg>
-  <div><div class="brand jpf">忍び日本語</div><div class="brand-ro">shinobi nihongo · latihan diam-diam tiap hari</div></div>
+  <div><div class="brand jpf">忍び日本語</div><div class="brand-ro">shinobi nihongo</div></div>
+  <button class="robtn on" id="roBtn" data-action="toggle-ro" aria-label="Romaji">ローマ字<br>ON</button>
   <button class="streak idle" id="streak" data-action="streak" aria-label="Streak"><span class="fl">🔥</span> <span id="streakN">0</span></button>
   <button class="gear" data-action="open-settings" aria-label="Pengaturan">⚙️</button>
  </header>
@@ -633,7 +649,7 @@ function cardHtml(p){
  var id=esc(p.id);
  return '<article class="ph" data-card="'+id+'">'+
   '<button class="ph-main" data-action="play" data-id="'+id+'">'+
-   '<span class="jp jpf">'+esc(p.jp)+'</span>'+(p.kana&&p.kana!==p.jp?'<span class="kana jpf">'+esc(p.kana)+'</span>':'')+
+   '<span class="jp jpf">'+jpHtml(p.jp,p.kana,p.romaji)+'</span>'+(p.kana&&p.kana!==p.jp&&!jpHasFuri(p.jp,p.kana,p.romaji)?'<span class="kana jpf">'+esc(p.kana)+'</span>':'')+
    '<span class="ro">'+esc(p.romaji)+'</span><span class="idn">'+esc(p.arti)+'</span><span class="step"></span></button>'+
   '<div class="ph-side"><span class="cnt">'+(p.created?ago(p.created):'')+'</span><button class="more" data-action="more" aria-label="Detail">⋯</button></div>'+
   '<div class="ph-more" hidden>'+detailHtml(p)+(p.src?'<div class="meta">Kamu bilang: “'+esc(p.src)+'”</div>':'')+'<button class="del" data-action="del" data-id="'+id+'">Hapus</button></div>'+
@@ -646,6 +662,73 @@ function renderList(){
  $('list').innerHTML=ps.length?ps.map(cardHtml).join(''):
   '<p class="empty">'+(searchQ?'Tidak ada frasa yang cocok.':'Belum ada riwayat. Ketik kegiatanmu di atas.')+'</p>';
 }
+
+/* ---------- furigana ---------- */
+var R2K={kya:'きゃ',kyu:'きゅ',kyo:'きょ',sha:'しゃ',shu:'しゅ',she:'しぇ',sho:'しょ',cha:'ちゃ',chu:'ちゅ',che:'ちぇ',cho:'ちょ',nya:'にゃ',nyu:'にゅ',nyo:'にょ',hya:'ひゃ',hyu:'ひゅ',hyo:'ひょ',mya:'みゃ',myu:'みゅ',myo:'みょ',rya:'りゃ',ryu:'りゅ',ryo:'りょ',gya:'ぎゃ',gyu:'ぎゅ',gyo:'ぎょ',bya:'びゃ',byu:'びゅ',byo:'びょ',pya:'ぴゃ',pyu:'ぴゅ',pyo:'ぴょ',shi:'し',chi:'ち',tsu:'つ',
+ ja:'じゃ',ju:'じゅ',je:'じぇ',jo:'じょ',ka:'か',ki:'き',ku:'く',ke:'け',ko:'こ',ga:'が',gi:'ぎ',gu:'ぐ',ge:'げ',go:'ご',sa:'さ',su:'す',se:'せ',so:'そ',za:'ざ',ji:'じ',zu:'ず',ze:'ぜ',zo:'ぞ',ta:'た',te:'て',to:'と',da:'だ',de:'で',do:'ど',na:'な',ni:'に',nu:'ぬ',ne:'ね',no:'の',ha:'は',hi:'ひ',fu:'ふ',he:'へ',ho:'ほ',ba:'ば',bi:'び',bu:'ぶ',be:'べ',bo:'ぼ',pa:'ぱ',pi:'ぴ',pu:'ぷ',pe:'ぺ',po:'ぽ',ma:'ま',mi:'み',mu:'む',me:'め',mo:'も',ya:'や',yu:'ゆ',yo:'よ',ra:'ら',ri:'り',ru:'る',re:'れ',ro:'ろ',wa:'わ',wo:'を',a:'あ',i:'い',u:'う',e:'え',o:'お'};
+function romaWord(r){
+ r=String(r||'').toLowerCase().replace(/[^a-z']/g,'');var out='',i=0;
+ while(i<r.length){
+  var c=r[i],nx=r[i+1];
+  if(c==="'"){i++;continue}
+  if(c==='n'&&(nx===undefined||nx==="'"||!/[aiueoy]/.test(nx))){out+='ん';i++;continue}
+  if(c===nx&&!/[aiueon]/.test(c)){out+='っ';i++;continue}
+  if(c==='t'&&nx==='c'){out+='っ';i++;continue}
+  var hit=false;for(var L=3;L>=1;L--){var s=r.substr(i,L);if(R2K[s]){out+=R2K[s];i+=L;hit=true;break}}
+  if(!hit)return null;
+ }
+ return out;
+}
+/* romaji -> hiragana, word by word; latin words that also appear in jp become ＊ */
+function romaToKana(r,jp){
+ var lat={};String(jp||'').replace(/[A-Za-z]+/g,function(m){lat[m.toLowerCase()]=1});
+ var words=String(r||'').split(/[\s,.!?\-、。]+/).filter(Boolean),out='';
+ for(var i=0;i<words.length;i++){var w=words[i];if(lat[w.toLowerCase().replace(/[^a-z]/g,'')]){out+='＊';continue}var k=romaWord(w);if(k===null)return null;out+=k}
+ return out;
+}
+function toHira(s){return String(s||'').replace(/[ァ-ヶ]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0x60)})}
+function isKanjiCh(c){return /[一-龯々０-９0-9]/.test(c)}
+function isKanaCh(c){return /[ぁ-ゖァ-ヶー]/.test(c)}
+/* returns ruby html or null when alignment fails */
+function furi(jp,reading){
+ if(!jp||!hasKanji(jp)||!reading)return null;
+ var rd=toHira(reading).replace(/[^ぁ-ゖー＊]/g,'');if(!rd)return null;
+ var toks=[],i=0;
+ while(i<jp.length){var c=jp[i];
+  if(isKanjiCh(c)){var j=i;while(j<jp.length&&isKanjiCh(jp[j]))j++;toks.push({t:'k',s:jp.slice(i,j)});i=j}
+  else if(isKanaCh(c)){toks.push({t:'h',s:c});i++}
+  else if(/[A-Za-z]/.test(c)){var q=i;while(q<jp.length&&/[A-Za-z]/.test(jp[q]))q++;toks.push({t:'l',s:jp.slice(i,q)});i=q}
+  else{toks.push({t:'p',s:c});i++}
+ }
+ var re='^',n=0;
+ toks.forEach(function(t){
+  if(t.t==='k'){re+='(.+?)';n++}
+  else if(t.t==='l'){re+='＊'}
+  else if(t.t==='h'){var h=toHira(t.s);re+=h==='ー'?'.':h==='は'?'(?:は|わ)':h==='を'?'(?:を|お)':h==='へ'?'(?:へ|え)':h}
+ });
+ var m;try{m=new RegExp(re+'$').exec(rd)}catch(e){return null}
+ if(!m)return null;
+ var k=1,html='';
+ toks.forEach(function(t){
+  if(t.t==='k'){var r=m[k++];if(!r||r.length>t.s.length*5)html=null;if(html!==null)html+='<ruby>'+esc(t.s)+'<rt>'+esc(r)+'</rt></ruby>'}
+  else if(html!==null)html+=esc(t.s);
+ });
+ return html;
+}
+function furiR(jp,romaji){
+ if(!jp||!hasKanji(jp))return null;
+ var whole=romaToKana(romaji,jp),res=whole?furi(jp,whole):null;if(res)return res;
+ var jc=jp.split(/([、。，？！?!])/),rc=String(romaji||'').split(/[,.?!]+/).map(function(s){return s.trim()}).filter(Boolean);
+ var parts=[],k=0,out='';
+ for(var i=0;i<jc.length;i++){var s=jc[i];if(!s)continue;if(/^[、。，？！?!]$/.test(s)){out+=esc(s);continue}
+  var rr=rc[k++];if(rr===undefined)return null;
+  if(!hasKanji(s)){out+=esc(s);continue}
+  var kk=romaToKana(rr,s),f=kk?furi(s,kk):null;if(!f)return null;out+=f}
+ return k===rc.length?out:null;
+}
+/* jp html with furigana when possible; also tells caller whether the separate kana line is still needed */
+function jpHtml(jp,kana,romaji){var h=furi(jp,kana)||(romaji?furiR(jp,romaji):null);return h||esc(jp)}
+function jpHasFuri(jp,kana,romaji){return !!(furi(jp,kana)||(romaji?furiR(jp,romaji):null))}
 
 /* ---------- kanji ---------- */
 var kjOpen=null;
@@ -665,8 +748,8 @@ function renderKanji(){
  var h='<div class="kj"><button class="kj-head" data-action="kj-toggle"><div class="kj-big jpf">'+item[0]+'</div><div><div class="kj-lbl">漢字 KANJI HARI INI · '+(k.known.length)+'/'+KANJI.length+' dikenal</div><div class="kj-arti">'+esc(item[1])+(k.doneToday?' ✅':'')+'</div></div><span class="kj-chev">'+(open?'▴':'▾')+'</span></button>';
  if(open){
   h+='<div class="kj-body">'+rd('KUN',item[2])+rd('ON',item[3])+'<div class="kj-sub">Contoh kata</div>'+
-   item[4].map(function(e){return '<div class="lp"><div><span class="jpf">'+esc(e[0])+'</span> <span class="kana jpf">'+(e[1]!==e[0]?esc(e[1]):'')+'</span><small>'+esc(e[2])+' · '+esc(e[3])+'</small></div><button class="say" data-action="say" data-text="'+esc(e[0])+'">▶</button></div>'}).join('')+
-   (mine.length?'<div class="kj-sub">Di frasamu</div>'+mine.map(function(p){return '<div class="lp"><div><span class="jpf">'+esc(p.jp)+'</span><small>'+esc(p.romaji)+' · '+esc(p.arti)+'</small></div><button class="say" data-action="say" data-text="'+esc(p.jp)+'">▶</button></div>'}).join(''):'')+
+   item[4].map(function(e){var fh=furi(e[0],e[1]);return '<div class="lp"><div><span class="jpf">'+(fh||esc(e[0]))+'</span> <span class="kana jpf">'+(e[1]!==e[0]&&!fh?esc(e[1]):'')+'</span><small><span class="ro-i">'+esc(e[2])+' · </span>'+esc(e[3])+'</small></div><button class="say" data-action="say" data-text="'+esc(e[0])+'">▶</button></div>'}).join('')+
+   (mine.length?'<div class="kj-sub">Di frasamu</div>'+mine.map(function(p){return '<div class="lp"><div><span class="jpf">'+jpHtml(p.jp,p.kana,p.romaji)+'</span><small><span class="ro-i">'+esc(p.romaji)+' · </span>'+esc(p.arti)+'</small></div><button class="say" data-action="say" data-text="'+esc(p.jp)+'">▶</button></div>'}).join(''):'')+
    '<div class="btns">'+(k.doneToday?'<span class="hint" style="align-self:center">Kanji berikutnya besok 🥷</span><button class="btn ghost sm" data-action="kj-more">Satu lagi</button>':'<button class="btn sm" data-action="kj-known">✅ Sudah kenal</button>')+'</div></div>';
  }
  el.innerHTML=h+'</div>';
@@ -839,9 +922,9 @@ function n5Make(id){
  if(t==='l'){var d=kwById(p[1]),l=d&&d.lines[+p[2]];if(!l)return null;
   var others=KAIWA.reduce(function(a,x){return a.concat(x.lines.map(function(y){return {arti:y[3],jp:y[1]}}))},[]).filter(function(y){return y.jp!==l[1]});
   var o=pickOthers(others,'arti',{arti:l[3]},3).map(function(y){return {t:y.arti,ok:false}});o.push({t:l[3],ok:true});
-  return {id:id,sec:'choukai',audio:l[1],html:'',ask:'Dengarkan. Apa artinya?',opts:shuffle(o),expl:'<span class="jpf">'+esc(l[1])+'</span><br><span class="ro-s">'+esc(l[2])+'</span>',textOpts:true}}
+  return {id:id,sec:'choukai',audio:l[1],html:'',ask:'Dengarkan. Apa artinya?',opts:shuffle(o),expl:'<span class="jpf">'+(furiR(l[1],l[2])||esc(l[1]))+'</span><br><span class="ro-s">'+esc(l[2])+'</span>',textOpts:true}}
  var w=V.filter(function(x){return x.jp===p[1]})[0];if(!w)return null;
- var line='<span class="jpf">'+esc(w.jp)+'</span>'+(w.kana!==w.jp?' (<span class="jpf">'+esc(w.kana)+'</span>)':'')+' · '+esc(w.ro)+' = '+esc(w.arti);
+ var line='<span class="jpf">'+esc(w.jp)+'</span>'+(w.kana!==w.jp?' (<span class="jpf">'+esc(w.kana)+'</span>)':'')+'<span class="ro-i"> · '+esc(w.ro)+'</span> = '+esc(w.arti);
  if(t==='r'){var o2=pickOthers(V.filter(function(x){return x.kana.length>=w.kana.length-1&&x.kana.length<=w.kana.length+1}).concat(V),'kana',w,3).map(function(x){return {t:x.kana,ro:x.ro,ok:false}});o2.push({t:w.kana,ro:w.ro,ok:true});
   return {id:id,sec:'moji',html:'<div class="n5-big jpf">'+esc(w.jp)+'</div>',ask:'Cara bacanya?',opts:shuffle(o2),expl:line}}
  if(t==='w'){var o3=pickOthers(V.filter(function(x){return hasKanji(x.jp)}),'jp',w,3).map(function(x){return {t:x.jp,ok:false}});o3.push({t:w.jp,ok:true});
@@ -938,7 +1021,7 @@ function renderKaiwa(){
     '<p class="hint">AI membuat dialog 6–8 kalimat: kamu (bentuk sopan) dan lawan bicara. Disimpan 10 dialog terakhir.</p><div id="kwGenMsg"></div></section>'+
     (kwAll().some(function(x){return x.cat==='mine'})?'':'<p class="empty">Belum ada dialog buatanmu. Ketik situasinya di atas.</p>'):'')+
    kwAll().filter(function(x){return x.cat===cat}).map(function(x){var done=data.kaiwaDone.indexOf(x.id)>=0;
-    return '<button class="kw-card" data-action="kw-open" data-id="'+x.id+'"><span class="kw-ic">'+c.ic+'</span><span><div class="kw-t">'+esc(x.title)+'</div><div class="kw-s">Kamu &amp; <span class="jpf">'+esc(x.other[0])+'</span> '+esc(x.other[1])+' · '+x.lines.length+' kalimat</div></span>'+(done?'<span class="kw-done">✓ Lancar</span>':'')+'</button>'}).join('')+
+    return '<button class="kw-card" data-action="kw-open" data-id="'+x.id+'"><span class="kw-ic">'+c.ic+'</span><span><div class="kw-t">'+esc(x.title)+'</div><div class="kw-s">Kamu &amp; <span class="jpf">'+esc(x.other[0])+'</span> <span class="ro-i">'+esc(x.other[1])+'</span> · '+x.lines.length+' kalimat</div></span>'+(done?'<span class="kw-done">✓ Lancar</span>':'')+'</button>'}).join('')+
    '<p class="hint" style="margin-top:6px">Ketuk dialog, lalu putar atau latihan peran. Kamu selalu jadi pihak di sebelah kanan.</p>';
   return;
  }
@@ -949,8 +1032,8 @@ function renderKaiwa(){
   '<div class="chips" style="margin:0 0 4px">'+[['1','1x'],['3','3x'],['0','Terus']].map(function(r){return '<button class="chip'+(String(data.settings.kwRep||'1')===r[0]?' on':'')+'" data-action="kw-rep" data-id="'+r[0]+'">🔁 '+r[1]+'</button>'}).join('')+'</div>'+
   '<div class="kw-step" id="kwStep"></div><div class="chat">'+
   d.lines.map(function(l,i){var me=l[0]==='k';
-   return '<div class="bub'+(me?' me':'')+'" data-bub="'+i+'"><span class="who">'+(me?'Kamu':esc(d.other[0])+' '+esc(d.other[1])+' · '+esc(d.other[2]))+'</span>'+
-    '<span class="jp jpf">'+esc(l[1])+'</span><span class="ro">'+esc(l[2])+'</span><span class="idn">'+esc(l[3])+'</span>'+
+   return '<div class="bub'+(me?' me':'')+'" data-bub="'+i+'"><span class="who">'+(me?'Kamu':esc(d.other[0])+' <span class="ro-i">'+esc(d.other[1])+'</span> · '+esc(d.other[2]))+'</span>'+
+    '<span class="jp jpf">'+(furiR(l[1],l[2])||esc(l[1]))+'</span><span class="ro">'+esc(l[2])+'</span><span class="idn">'+esc(l[3])+'</span>'+
     '<div class="bub-row"><button data-action="kw-say" data-id="'+d.id+':'+i+'">▶</button><button data-action="kw-line" data-id="'+d.id+':'+i+'">🔁 Ulang</button>'+(me?'<button data-action="kw-save" data-id="'+d.id+':'+i+'">＋ Frasa</button>':'')+'</div></div>'}).join('')+'</div>';
 }
 function kwMark(i,cls,on){var b=document.querySelector('[data-bub="'+i+'"]');if(b)b.classList.toggle(cls,on)}
@@ -1016,6 +1099,7 @@ function politeRows(w){
  if(t&&t.jp)rows.push(['〜てください','tolong',t.jp+'ください',t.romaji+' kudasai']);
  return rows;
 }
+function wordJp(w){var pl=polite(w);return pl.kamus?(furiR(pl.jp,pl.romaji)||esc(pl.jp)):(furi(w.jp,w.kana)||esc(w.jp))}
 function phrasesFor(w){var s=w.stem||w.jp;return data.phrases.filter(function(p){return p.jp&&p.jp.indexOf(s)>=0})}
 function setView(v){
  data.settings.view=v;save();
@@ -1036,7 +1120,7 @@ function renderWords(){
   ws.sort(function(a,b){return (b.created||0)-(a.created||0)});
   html+='<div class="cat-h">'+x.name+' <span class="jpf">'+x.jp+'</span><small>'+x.ro+' · '+ws.length+'</small></div><div class="wgrid">'+
    ws.map(function(w){var n=phrasesFor(w).length;
-    return '<button class="wd" data-action="word" data-id="'+esc(w.id)+'"><span class="wd-jp jpf">'+esc(polite(w).jp)+'</span>'+(polite(w).kamus?'':(w.kana&&w.kana!==w.jp?'<span class="wd-kana jpf">'+esc(w.kana)+'</span>':''))+
+    return '<button class="wd" data-action="word" data-id="'+esc(w.id)+'"><span class="wd-jp jpf">'+wordJp(w)+'</span>'+(polite(w).kamus||furi(w.jp,w.kana)?'':(w.kana&&w.kana!==w.jp?'<span class="wd-kana jpf">'+esc(w.kana)+'</span>':''))+
      '<span class="wd-ro">'+esc(polite(w).romaji)+'</span><span class="wd-id">'+esc(w.arti)+'</span><span class="wd-n">'+(n?'💬 '+n+' frasa':'belum ada di frasamu')+'</span></button>'}).join('')+'</div>';
  });
  $('wlist').innerHTML=html||'<p class="empty" style="margin-top:14px">'+(q?'Tidak ada kata yang cocok.':'Belum ada kata.')+'</p>';
@@ -1054,15 +1138,15 @@ function addPack(id){
 function openWord(id){
  var w=wordById(id);if(!w)return;var c=CAT[w.cat]||CAT.lain,ps=phrasesFor(w);
  var h='<div class="sh-head"><span class="badge">'+c.name+' · '+c.jp+' '+c.ro+'</span><button class="btn ghost sm" data-action="close-word">Tutup</button></div>'+
-  '<div class="sh-sec"><div class="w-big jpf">'+esc(polite(w).jp)+'</div>'+(polite(w).kamus?'':(w.kana&&w.kana!==w.jp?'<div class="kana jpf">'+esc(w.kana)+'</div>':''))+
+  '<div class="sh-sec"><div class="w-big jpf">'+wordJp(w)+'</div>'+(polite(w).kamus||furi(w.jp,w.kana)?'':(w.kana&&w.kana!==w.jp?'<div class="kana jpf">'+esc(w.kana)+'</div>':''))+
   '<div class="ro">'+esc(polite(w).romaji)+'</div><div class="idn">'+esc(w.arti)+'</div>'+
   '<div class="btns"><button class="btn sm" data-action="wplay" data-id="'+esc(w.id)+'">▶ Dengar</button></div></div>';
  if(w.forms){
   var rows=politeRows(w).map(function(r){return [r[0]+'<br><span style="font-weight:600">'+r[1]+'</span>',r[2],r[3]]});
   h+='<div class="sh-sec"><h3>Pola kaiwa</h3><p>Bentuk sopan yang paling sering dipakai saat bicara. Bentuk kamus: <span class="jpf">'+esc(w.jp)+'</span> <i>'+esc(w.romaji)+'</i></p><table class="ftable">'+
-   rows.filter(function(r){return r[1]}).map(function(r){return '<tr><td>'+r[0]+'</td><td><span class="jpf" style="font-weight:700">'+esc(r[1])+'</span><br><span class="ro-s">'+esc(r[2])+'</span></td><td style="text-align:right"><button class="say" data-action="say" data-text="'+esc(r[1])+'">▶</button></td></tr>'}).join('')+'</table></div>';
+   rows.filter(function(r){return r[1]}).map(function(r){return '<tr><td>'+r[0]+'</td><td><span class="jpf" style="font-weight:700">'+(furiR(r[1],r[2])||esc(r[1]))+'</span><br><span class="ro-s">'+esc(r[2])+'</span></td><td style="text-align:right"><button class="say" data-action="say" data-text="'+esc(r[1])+'">▶</button></td></tr>'}).join('')+'</table></div>';
  }
- h+='<div class="sh-sec"><h3>Dipakai di frasamu</h3>'+(ps.length?ps.map(function(p){return '<div class="lp"><div><span class="jpf">'+esc(p.jp)+'</span><small>'+esc(p.romaji)+' · '+esc(p.arti)+'</small></div><button class="say" data-action="say" data-text="'+esc(p.jp)+'">▶</button></div>'}).join(''):'<p>Belum ada. Kata ini akan terhubung otomatis saat muncul di frasa yang kamu simpan.</p>')+'</div>'+
+ h+='<div class="sh-sec"><h3>Dipakai di frasamu</h3>'+(ps.length?ps.map(function(p){return '<div class="lp"><div><span class="jpf">'+jpHtml(p.jp,p.kana,p.romaji)+'</span><small><span class="ro-i">'+esc(p.romaji)+' · </span>'+esc(p.arti)+'</small></div><button class="say" data-action="say" data-text="'+esc(p.jp)+'">▶</button></div>'}).join(''):'<p>Belum ada. Kata ini akan terhubung otomatis saat muncul di frasa yang kamu simpan.</p>')+'</div>'+
   '<button class="del" data-action="wdel" data-id="'+esc(w.id)+'">Hapus kata</button>';
  $('wsheetIn').innerHTML=h;$('wsheet').hidden=false;
 }
@@ -1263,7 +1347,7 @@ function renderResult(){
  var p=currentResult,el=$('result');
  if(!p){el.innerHTML='';return}
  el.innerHTML='<div class="res" data-card="result">'+
-  '<div class="jp jpf">'+esc(p.jp)+'</div>'+(p.kana&&p.kana!==p.jp?'<div class="kana jpf">'+esc(p.kana)+'</div>':'')+
+  '<div class="jp jpf">'+jpHtml(p.jp,p.kana,p.romaji)+'</div>'+(p.kana&&p.kana!==p.jp&&!jpHasFuri(p.jp,p.kana,p.romaji)?'<div class="kana jpf">'+esc(p.kana)+'</div>':'')+
   '<div class="ro">'+esc(p.romaji)+'</div><div class="idn">'+esc(p.arti)+'</div><div class="step"></div>'+detailHtml(p)+
   '<div class="res-act"><button class="btn ghost" data-action="play" data-id="result">▶ Dengar 3x</button>'+
   '<button class="btn ghost" data-action="dismiss">Tutup</button></div></div>';
@@ -1340,6 +1424,7 @@ document.addEventListener('click',function(e){
  else if(a==='kw-cat'){stopAll();data.settings.kwCat=id;save();kwOpen=null;renderKaiwa()}
  else if(a==='kw-open'){stopAll();kwOpen=id;renderKaiwa();window.scrollTo(0,0)}
  else if(a==='kw-back'){stopAll();kwOpen=null;renderKaiwa()}
+ else if(a==='toggle-ro'){data.settings.noro=!data.settings.noro;save();applyRo();toast(data.settings.noro?'Romaji disembunyikan 🥷':'Romaji ditampilkan')}
  else if(a==='kn-start'){stopAll();knStart()}
  else if(a==='lat'){stopAll();KN.q=null;N5Q.q=null;data.settings.lat=id;save();renderLatihan()}
  else if(a==='n5-start'){stopAll();n5Start()}
@@ -1425,7 +1510,8 @@ function initCaps(){
 }
 if(!initCaps()){var tries=0,iv=setInterval(function(){if(initCaps()||++tries>20)clearInterval(iv)},250)}
 
-renderKanji();renderTools();renderList();renderStreak();
+function applyRo(){document.body.classList.toggle('noro',!!data.settings.noro);var b=$('roBtn');if(b){b.classList.toggle('on',!data.settings.noro);b.innerHTML='ローマ字<br>'+(data.settings.noro?'OFF':'ON')}}
+applyRo();renderKanji();renderTools();renderList();renderStreak();
 /* PWA: offline support (GitHub Pages only) */
 if('serviceWorker' in navigator&&location.protocol==='https:'&&!/claude\.ai|claudeusercontent/.test(location.hostname)){
  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});
